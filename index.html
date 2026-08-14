@@ -36,6 +36,9 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(93,2
  .summary{grid-template-columns:1fr 1fr}.total{grid-column:1/-1}
 }
 @media(max-width:520px){.member{grid-template-columns:34px 1fr 38px}.member input{grid-column:2/4}.member select{grid-column:2}.member .score{grid-column:2}.member .remove{grid-column:3;grid-row:1}.summary{grid-template-columns:1fr}}
+
+.clan-tools,.table-search{display:flex;gap:10px;margin:0 0 14px}.clan-tools input,.table-search input{flex:1;background:#070b12;border:1px solid #263245;color:#f4f7fb;border-radius:10px;padding:11px 13px;outline:none}.clan-tools input:focus,.table-search input:focus{border-color:#f5ad16}.clan-tools .btn{white-space:nowrap}.table-search{margin-top:4px}
+@media(max-width:520px){.clan-tools{flex-direction:column}.clan-tools .btn{width:100%}}
 </style>
 </head>
 <body>
@@ -47,6 +50,7 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(93,2
 
   <div class="card">
     <div class="section-title"><h2>👥 클랜 구성</h2><span>닉네임은 선택사항</span></div>
+    <div class="clan-tools"><input id="clanName" placeholder="클랜 이름 (선택사항)" maxlength="30"><button class="btn" id="copyBtn">📋 결과 복사</button></div>
     <div class="members" id="members"></div>
     <div class="actions">
       <button class="btn primary" id="addBtn">＋ 클랜원 추가</button>
@@ -65,13 +69,13 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(93,2
     </div>
     <div class="verdict ok" id="verdict"><strong>구성원을 추가해 주세요.</strong><small>5명까지 등록할 수 있습니다.</small></div>
     <div class="progress"><div class="bar" id="bar"></div></div>
-    <div class="note">※ 고추밭 기준 상한은 150점입니다. 마스터 이상 4명 이상도 별도 경고합니다. 실제 대회에서는 참가자 분포를 보고 상한을 145~155점 사이에서 조정하는 것을 권장합니다.</div>
   </div>
 
   <div class="card">
     <div class="section-title"><h2>📊 공식 클랜 점수표</h2><span>라인별 가중치 적용</span></div>
+    <div class="table-search"><input id="scoreSearch" placeholder="티어 검색 (예: 마스터 1000+, 다이아1)"></div>
     <div class="table-wrap"><table class="score-table"><thead><tr><th>티어</th><th>🛡️ TOP</th><th>🌲 JUG</th><th>🔮 MID</th><th>🏹 ADC</th><th>👑 SUP</th></tr></thead><tbody id="scoreBody"></tbody></table></div>
-    <div class="note">⭐ 마스터는 1000점 이상까지 세분화했습니다. 점수는 상위권 과밀을 고려해 완만하게 상승합니다.<br>이 점수표는 고추밭의 인원 분포를 반영한 커스텀 기준입니다. 마스터는 0점부터 1000점 이상까지 세분화하고, 다이아 구간을 상대적으로 촘촘하게 배치했습니다.</div>
+    <div class="note">⭐ 마스터는 1000점 이상까지 세분화 · 다이아 구간은 상대적으로 촘촘하게 적용</div>
   </div>
 </div>
 <script>
@@ -196,6 +200,24 @@ rows.forEach((r,idx)=>{
  const tr=document.createElement("tr");
  r.forEach((x,i)=>{const td=document.createElement("td");td.textContent=i===0?x:Number(x).toFixed(1);if(i>0&&idx<5)td.className="high";tr.appendChild(td)});
  body.appendChild(tr);
+});
+
+document.getElementById("copyBtn").onclick=async()=>{
+ const name=document.getElementById("clanName").value.trim()||"이름 없는 클랜";
+ const lines=[`[고추밭 클랜] ${name}`,`총점: ${document.getElementById("total").textContent} / 150.0`,""];
+ [...membersEl.children].forEach((r,i)=>{
+   const nick=r.children[1].value.trim()||`클랜원 ${i+1}`;
+   const tier=r.children[2].value||"미선택";
+   const lane=r.children[3].value||"미선택";
+   const score=r.querySelector(".score").textContent;
+   lines.push(`${i+1}. ${nick} / ${lane} / ${tier} / ${score}점`);
+ });
+ const text=lines.join("\n");
+ try{await navigator.clipboard.writeText(text);const b=document.getElementById("copyBtn");b.textContent="✅ 복사 완료";setTimeout(()=>b.textContent="📋 결과 복사",1200)}catch(e){alert(text)}
+};
+document.getElementById("scoreSearch").addEventListener("input",e=>{
+ const q=e.target.value.trim().toLowerCase();
+ [...document.querySelectorAll("#scoreBody tr")].forEach(tr=>{tr.style.display=(!q||tr.cells[0].textContent.toLowerCase().includes(q))?"":"none";});
 });
 reset();
 </script>
