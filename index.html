@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>고추밭 클랜 밸런스 시뮬레이터</title>
+<style>
+:root{
+ --bg:#07101f;--panel:#0d1a2d;--panel2:#111f35;--line:#263852;--text:#edf4ff;
+ --muted:#8fa4bf;--gold:#f4c95d;--cyan:#5dd6ff;--green:#51e3a4;--red:#ff667d;
+ --shadow:0 18px 45px rgba(0,0,0,.28);--radius:18px;
+}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 0%,#102744 0,#07101f 40%,#050b15 100%);color:var(--text);font-family:Inter,Pretendard,"Noto Sans KR",sans-serif}
+.container{max-width:1180px;margin:auto;padding:28px 18px 60px}
+.hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:22px}
+.eyebrow{color:var(--gold);font-size:12px;font-weight:800;letter-spacing:.16em}.hero h1{margin:6px 0;font-size:clamp(28px,5vw,44px)}.hero p{margin:0;color:var(--muted)}
+.badge{padding:10px 14px;border:1px solid #38506e;background:#0c1b30;border-radius:999px;color:#bcd0e9;font-weight:700}
+.card{background:linear-gradient(180deg,rgba(17,31,53,.96),rgba(10,22,38,.96));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.section-title h2{font-size:18px;margin:0}.section-title span{font-size:12px;color:var(--muted)}
+.members{display:grid;gap:12px}
+.member{display:grid;grid-template-columns:44px 1.2fr 1fr 1fr 110px 38px;gap:10px;align-items:center;background:#0a1729;border:1px solid #20334c;padding:12px;border-radius:14px}
+.num{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#162944;color:var(--gold);font-weight:900}
+input,select{width:100%;background:#0b1626;color:var(--text);border:1px solid #30455f;border-radius:10px;padding:11px 12px;outline:none;font-size:14px}
+input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(93,214,255,.1)}
+.score{font-size:19px;font-weight:900;text-align:right;color:var(--gold)}
+.remove{border:1px solid #344960;background:#111e31;color:#a9bdd5;border-radius:10px;height:38px;cursor:pointer}.remove:hover{color:#fff;border-color:#5b6f88}
+.actions{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}.btn{border:0;border-radius:11px;padding:11px 15px;font-weight:800;cursor:pointer;background:#17304c;color:#dbe9f8}.btn.primary{background:linear-gradient(135deg,#e6b843,#f5d36d);color:#1a2230}.btn.danger{background:#3a1720;color:#ffb3be}.btn:hover{filter:brightness(1.08)}
+.summary{display:grid;grid-template-columns:1.25fr repeat(3,1fr);gap:12px}.metric{background:#091629;border:1px solid #233850;border-radius:15px;padding:16px}.metric .label{font-size:12px;color:var(--muted)}.metric .value{font-size:28px;font-weight:950;margin-top:5px}.total{border-color:#6b5521;background:linear-gradient(135deg,#171b1c,#241f10)}.total .value{color:var(--gold)}
+.verdict{margin-top:12px;padding:15px 17px;border-radius:14px;border:1px solid #2c4660;background:#0b1b2e}.verdict strong{font-size:17px}.verdict small{display:block;color:var(--muted);margin-top:5px}
+.verdict.ok{border-color:#25654e;background:#0b211c}.verdict.warn{border-color:#795e25;background:#281f0d}.verdict.bad{border-color:#743044;background:#2a1018}
+.progress{height:9px;background:#16263a;border-radius:999px;overflow:hidden;margin-top:12px}.bar{height:100%;width:0;background:linear-gradient(90deg,#51e3a4,#f4c95d,#ff667d);transition:.25s}
+.table-wrap{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:13px}.score-table{width:100%;border-collapse:collapse;min-width:700px}.score-table th,.score-table td{padding:10px 12px;border-bottom:1px solid #20334b;text-align:right;font-size:13px}.score-table th{position:sticky;top:0;background:#13243a;color:#bcd0e9}.score-table th:first-child,.score-table td:first-child{text-align:left;position:sticky;left:0;background:#0d1a2d}.score-table tr:last-child td{border-bottom:0}.score-table .high{color:var(--gold);font-weight:900}
+.note{color:var(--muted);font-size:12px;line-height:1.6;margin-top:10px}
+@media(max-width:800px){
+ .hero{align-items:flex-start;flex-direction:column}.member{grid-template-columns:38px 1fr 1fr 1fr;}.member .score{grid-column:2/4;text-align:left}.member .remove{grid-column:4;grid-row:1}
+ .summary{grid-template-columns:1fr 1fr}.total{grid-column:1/-1}
+}
+@media(max-width:520px){.member{grid-template-columns:34px 1fr 38px}.member input{grid-column:2/4}.member select{grid-column:2}.member .score{grid-column:2}.member .remove{grid-column:3;grid-row:1}.summary{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="hero">
+    <div><div class="eyebrow">GOCHUBAT · CLAN BALANCE</div><h1>고추밭 클랜 밸런스 시뮬레이터</h1><p>최대 5명의 티어와 포지션을 넣으면 클랜 점수를 자동 계산합니다.</p></div>
+    <div class="badge">클랜 최대 5명 · 상한 150점</div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><h2>👥 클랜 구성</h2><span>닉네임은 선택사항</span></div>
+    <div class="members" id="members"></div>
+    <div class="actions">
+      <button class="btn primary" id="addBtn">＋ 클랜원 추가</button>
+      <button class="btn" id="sampleBtn">예시 구성 불러오기</button>
+      <button class="btn danger" id="resetBtn">초기화</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><h2>⚖️ 클랜 점수 리포트</h2><span>기준 상한 150.0점</span></div>
+    <div class="summary">
+      <div class="metric total"><div class="label">클랜 총점</div><div class="value" id="total">0.0</div></div>
+      <div class="metric"><div class="label">평균 점수</div><div class="value" id="avg">0.0</div></div>
+      <div class="metric"><div class="label">최고점</div><div class="value" id="max">0.0</div></div>
+      <div class="metric"><div class="label">점수 격차</div><div class="value" id="gap">0.0</div></div>
+    </div>
+    <div class="verdict ok" id="verdict"><strong>구성원을 추가해 주세요.</strong><small>5명까지 등록할 수 있습니다.</small></div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="note">※ 고추밭 기준 상한은 150점입니다. 마스터 이상 4명 이상도 별도 경고합니다. 실제 대회에서는 참가자 분포를 보고 상한을 145~155점 사이에서 조정하는 것을 권장합니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><h2>📊 공식 클랜 점수표</h2><span>라인별 가중치 적용</span></div>
+    <div class="table-wrap"><table class="score-table"><thead><tr><th>티어</th><th>🛡️ TOP</th><th>🌲 JUG</th><th>🔮 MID</th><th>🏹 ADC</th><th>👑 SUP</th></tr></thead><tbody id="scoreBody"></tbody></table></div>
+    <div class="note">이 점수표는 고추밭의 인원 분포를 반영한 커스텀 기준입니다. 마스터 이상은 점수 간격을 압축하고, 다이아 구간을 상대적으로 촘촘하게 배치했습니다.</div>
+  </div>
+</div>
+<script>
+const lanes=["TOP","JUG","MID","ADC","SUP"];
+const laneNames={TOP:"🛡️ TOP",JUG:"🌲 JUG",MID:"🔮 MID",ADC:"🏹 ADC",SUP:"👑 SUP"};
+
+/* 제공된 예시 점수 */
+const rows=[
+["챌린저 2000+",50.0,49.0,50.0,50.0,48.0],
+["챌린저 1500~1999",48.0,47.0,48.0,48.0,46.0],
+["챌린저 1000~1499",46.0,45.0,46.0,46.0,44.0],
+["챌린저 500~999",44.0,43.0,44.0,44.0,42.0],
+["챌린저 0~499",42.0,41.0,42.0,42.0,40.0],
+["그랜드마스터 1000+",41.0,40.0,41.0,41.0,39.0],
+["그랜드마스터 500~999",39.0,38.0,39.0,39.0,37.0],
+["그랜드마스터 0~499",37.0,36.0,37.0,37.0,35.0],
+["마스터 700+",35.0,34.0,35.0,35.0,33.0],
+["마스터 500~699",34.0,33.0,34.0,34.0,32.0],
+["마스터 300~499",33.0,32.0,33.0,33.0,31.0],
+["마스터 100~299",32.0,31.0,32.0,32.0,30.0],
+["마스터 0~99",31.0,30.0,31.0,31.0,29.0],
+["다이아1",29.0,28.5,30.0,28.0,29.5],
+["다이아2",27.0,26.5,28.0,26.0,27.5],
+["다이아3",25.0,24.5,26.0,24.0,25.5],
+["다이아4",23.0,22.5,24.0,22.0,23.5],
+["에메랄드1",20.0,19.5,21.0,19.0,20.5],
+["에메랄드2",18.0,17.5,19.0,17.0,18.5],
+["에메랄드3",16.0,15.5,17.0,15.0,16.5],
+["에메랄드4",14.0,13.5,15.0,13.0,14.5],
+["플래티넘1",12.0,11.5,13.0,11.0,12.5],
+["플래티넘2",11.0,10.5,12.0,10.0,11.5],
+["플래티넘3",10.0,9.5,11.0,9.0,10.5],
+["플래티넘4",9.0,8.5,10.0,8.0,9.5],
+["골드1",8.0,7.5,9.0,7.0,8.5],
+["골드2",7.0,6.5,8.0,6.0,7.5],
+["골드3",6.0,5.5,7.0,5.0,6.5],
+["골드4",5.0,4.5,6.0,4.0,5.5],
+["실버1",4.0,3.7,4.5,3.5,4.3],
+["실버2",3.5,3.2,4.0,3.0,3.8],
+["실버3",3.0,2.7,3.5,2.5,3.3],
+["실버4",2.5,2.2,3.0,2.0,2.8],
+["브론즈1",2.0,1.8,2.5,1.6,2.2],
+["브론즈2",1.7,1.5,2.2,1.3,1.9],
+["브론즈3",1.4,1.2,1.9,1.1,1.6],
+["브론즈4",1.1,0.9,1.6,0.9,1.3]
+];
+
+const tierList=rows.map(r=>r[0]);
+const data={}; rows.forEach(r=>data[r[0]]={TOP:r[1],JUG:r[2],MID:r[3],ADC:r[4],SUP:r[5]});
+
+const membersEl=document.getElementById("members");
+function makeSelect(options,placeholder){
+ const s=document.createElement("select"); s.innerHTML=`<option value="">${placeholder}</option>`+options.map(x=>`<option>${x}</option>`).join(""); return s;
+}
+function addMember(v={}){
+ if(membersEl.children.length>=5) return;
+ const i=membersEl.children.length+1;
+ const row=document.createElement("div"); row.className="member";
+ const num=document.createElement("div"); num.className="num"; num.textContent=i;
+ const name=document.createElement("input"); name.placeholder="닉네임"; name.value=v.name||"";
+ const tier=makeSelect(tierList,"티어 선택"); tier.value=v.tier||"";
+ const lane=makeSelect(lanes.map(x=>laneNames[x]+"|"+x),"라인 선택");
+ // visible label + internal value
+ lane.innerHTML='<option value="">라인 선택</option>'+lanes.map(x=>`<option value="${x}">${laneNames[x]}</option>`).join("");
+ lane.value=v.lane||"";
+ const score=document.createElement("div"); score.className="score"; score.textContent="0.0";
+ const remove=document.createElement("button"); remove.className="remove"; remove.textContent="×"; remove.title="삭제";
+ remove.onclick=()=>{row.remove();renumber();calc();};
+ [num,name,tier,lane,score,remove].forEach(x=>row.appendChild(x));
+ [name,tier,lane].forEach(x=>x.addEventListener("input",calc));
+ membersEl.appendChild(row); calc();
+}
+function renumber(){[...membersEl.children].forEach((r,i)=>r.querySelector(".num").textContent=i+1);}
+function calc(){
+ let total=0, vals=[];
+ [...membersEl.children].forEach(r=>{
+  const tier=r.children[2].value, lane=r.children[3].value;
+  const s=tier&&lane?data[tier][lane]:0;
+  r.querySelector(".score").textContent=s.toFixed(1);
+  if(s){total+=s;vals.push(s);}
+ });
+ const avg=vals.length?total/vals.length:0,max=vals.length?Math.max(...vals):0,min=vals.length?Math.min(...vals):0,gap=vals.length?max-min:0;
+ const upperCount=[...membersEl.children].filter(r=>{
+   const t=r.children[2].value;
+   return t.startsWith("챌린저")||t.startsWith("그랜드마스터")||t.startsWith("마스터");
+ }).length;
+
+ document.getElementById("total").textContent=total.toFixed(1);
+ document.getElementById("avg").textContent=avg.toFixed(1);
+ document.getElementById("max").textContent=max.toFixed(1);
+ document.getElementById("gap").textContent=gap.toFixed(1);
+ const verdict=document.getElementById("verdict");
+ if(!vals.length){verdict.className="verdict ok";verdict.innerHTML="<strong>구성원을 추가해 주세요.</strong><small>티어와 라인을 선택하면 실시간으로 계산됩니다.</small>";}
+ else if(total>150){verdict.className="verdict bad";verdict.innerHTML=`<strong>🔴 상한 초과 — ${(total-150).toFixed(1)}점 초과</strong><small>현재 ${vals.length}명 · 최대 허용 150.0점</small>`;}
+ else if(upperCount>=4){verdict.className="verdict bad";verdict.innerHTML=`<strong>🔴 상위 티어 집중 — 마/그/챌 ${upperCount}명</strong><small>마스터 이상은 최대 3명까지 권장하는 고추밭 기준입니다.</small>`;}
+ else if(total>=135){verdict.className="verdict warn";verdict.innerHTML=`<strong>🟠 상한에 가까운 클랜</strong><small>150점까지 ${(150-total).toFixed(1)}점 남았습니다.</small>`;}
+ else if(total>=105){verdict.className="verdict ok";verdict.innerHTML=`<strong>🟡 중상위 밸런스</strong><small>현재 ${vals.length}명 · 상한까지 ${(150-total).toFixed(1)}점</small>`;}
+ else {verdict.className="verdict ok";verdict.innerHTML=`<strong>🟢 안정적인 점수 구간</strong><small>현재 ${vals.length}명 · 상한까지 ${(150-total).toFixed(1)}점</small>`;}
+ document.getElementById("bar").style.width=Math.min(total/150*100,100)+"%";
+}
+function reset(){membersEl.innerHTML="";for(let i=0;i<5;i++)addMember();}
+document.getElementById("addBtn").onclick=()=>addMember();
+document.getElementById("resetBtn").onclick=reset;
+document.getElementById("sampleBtn").onclick=()=>{
+ membersEl.innerHTML="";
+ [
+  {name:"예시 TOP",tier:"다이아1",lane:"TOP"},
+  {name:"예시 JUG",tier:"에메랄드2",lane:"JUG"},
+  {name:"예시 MID",tier:"마스터 400~499",lane:"MID"},
+  {name:"예시 ADC",tier:"플래티넘1",lane:"ADC"},
+  {name:"예시 SUP",tier:"골드2",lane:"SUP"}
+ ].forEach(addMember);
+};
+const body=document.getElementById("scoreBody");
+rows.forEach((r,idx)=>{
+ const tr=document.createElement("tr");
+ r.forEach((x,i)=>{const td=document.createElement("td");td.textContent=i===0?x:Number(x).toFixed(1);if(i>0&&idx<5)td.className="high";tr.appendChild(td)});
+ body.appendChild(tr);
+});
+reset();
+</script>
+</body>
+</html>
