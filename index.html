@@ -3,235 +3,283 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>고추밭 클랜 밸런스 시뮬레이터</title>
+<title>고추밭 클랜 점수 계산기</title>
 <style>
 :root{
- --bg:#07101f;--panel:#0d1a2d;--panel2:#111f35;--line:#263852;--text:#edf4ff;
- --muted:#8fa4bf;--gold:#f4c95d;--cyan:#5dd6ff;--green:#51e3a4;--red:#ff667d;
- --shadow:0 18px 45px rgba(0,0,0,.28);--radius:18px;
+  --bg:#07101f;--bg2:#0b1627;--panel:#0f1d31;--panel2:#12233b;--line:#263a55;
+  --text:#eef5ff;--muted:#8da3bf;--gold:#f2c45a;--gold2:#ffd979;--cyan:#66d7ff;
+  --green:#55d89b;--red:#ff6a7f;--orange:#ffad5c;--blue:#6ba8ff;--radius:20px;
+  --shadow:0 18px 50px rgba(0,0,0,.28)
 }
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 0%,#102744 0,#07101f 40%,#050b15 100%);color:var(--text);font-family:Inter,Pretendard,"Noto Sans KR",sans-serif}
-.container{max-width:1180px;margin:auto;padding:28px 18px 60px}
-.hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:22px}
-.eyebrow{color:var(--gold);font-size:12px;font-weight:800;letter-spacing:.16em}.hero h1{margin:6px 0;font-size:clamp(28px,5vw,44px)}.hero p{margin:0;color:var(--muted)}
-.badge{padding:10px 14px;border:1px solid #38506e;background:#0c1b30;border-radius:999px;color:#bcd0e9;font-weight:700}
-.card{background:linear-gradient(180deg,rgba(17,31,53,.96),rgba(10,22,38,.96));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
-.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.section-title h2{font-size:18px;margin:0}.section-title span{font-size:12px;color:var(--muted)}
-.members{display:grid;gap:12px}
-.member{display:grid;grid-template-columns:44px 1.2fr 1fr 1fr 110px 38px;gap:10px;align-items:center;background:#0a1729;border:1px solid #20334c;padding:12px;border-radius:14px}
-.num{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#162944;color:var(--gold);font-weight:900}
-input,select{width:100%;background:#0b1626;color:var(--text);border:1px solid #30455f;border-radius:10px;padding:11px 12px;outline:none;font-size:14px}
-input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(93,214,255,.1)}
-.score{font-size:19px;font-weight:900;text-align:right;color:var(--gold)}
-.remove{border:1px solid #344960;background:#111e31;color:#a9bdd5;border-radius:10px;height:38px;cursor:pointer}.remove:hover{color:#fff;border-color:#5b6f88}
-.actions{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}.btn{border:0;border-radius:11px;padding:11px 15px;font-weight:800;cursor:pointer;background:#17304c;color:#dbe9f8}.btn.primary{background:linear-gradient(135deg,#e6b843,#f5d36d);color:#1a2230}.btn.danger{background:#3a1720;color:#ffb3be}.btn:hover{filter:brightness(1.08)}
-.summary{display:grid;grid-template-columns:1.25fr repeat(3,1fr);gap:12px}.metric{background:#091629;border:1px solid #233850;border-radius:15px;padding:16px}.metric .label{font-size:12px;color:var(--muted)}.metric .value{font-size:28px;font-weight:950;margin-top:5px}.total{border-color:#6b5521;background:linear-gradient(135deg,#171b1c,#241f10)}.total .value{color:var(--gold)}
-.verdict{margin-top:12px;padding:15px 17px;border-radius:14px;border:1px solid #2c4660;background:#0b1b2e}.verdict strong{font-size:17px}.verdict small{display:block;color:var(--muted);margin-top:5px}
-.verdict.ok{border-color:#25654e;background:#0b211c}.verdict.warn{border-color:#795e25;background:#281f0d}.verdict.bad{border-color:#743044;background:#2a1018}
-.progress{height:9px;background:#16263a;border-radius:999px;overflow:hidden;margin-top:12px}.bar{height:100%;width:0;background:linear-gradient(90deg,#51e3a4,#f4c95d,#ff667d);transition:.25s}
-.table-wrap{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:13px}.score-table{width:100%;border-collapse:collapse;min-width:700px}.score-table th,.score-table td{padding:10px 12px;border-bottom:1px solid #20334b;text-align:right;font-size:13px}.score-table th{position:sticky;top:0;background:#13243a;color:#bcd0e9}.score-table th:first-child,.score-table td:first-child{text-align:left;position:sticky;left:0;background:#0d1a2d}.score-table tr:last-child td{border-bottom:0}.score-table .high{color:var(--gold);font-weight:900}
-.note{color:var(--muted);font-size:12px;line-height:1.6;margin-top:10px}
-@media(max-width:800px){
- .hero{align-items:flex-start;flex-direction:column}.member{grid-template-columns:38px 1fr 1fr 1fr;}.member .score{grid-column:2/4;text-align:left}.member .remove{grid-column:4;grid-row:1}
- .summary{grid-template-columns:1fr 1fr}.total{grid-column:1/-1}
-}
-@media(max-width:520px){.member{grid-template-columns:34px 1fr 38px}.member input{grid-column:2/4}.member select{grid-column:2}.member .score{grid-column:2}.member .remove{grid-column:3;grid-row:1}.summary{grid-template-columns:1fr}}
-
-.clan-tools,.table-search{display:flex;gap:10px;margin:0 0 14px}.clan-tools input,.table-search input{flex:1;background:#070b12;border:1px solid #263245;color:#f4f7fb;border-radius:10px;padding:11px 13px;outline:none}.clan-tools input:focus,.table-search input:focus{border-color:#f5ad16}.clan-tools .btn{white-space:nowrap}.table-search{margin-top:4px}
-@media(max-width:520px){.clan-tools{flex-direction:column}.clan-tools .btn{width:100%}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:
+  radial-gradient(circle at 15% -10%,#16365e 0,transparent 32%),
+  radial-gradient(circle at 95% 10%,#122846 0,transparent 28%),
+  linear-gradient(180deg,#07101f 0%,#050b14 100%);
+  color:var(--text);font-family:Pretendard,"Noto Sans KR",Inter,system-ui,sans-serif;min-height:100vh}
+button,input{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1240px;margin:0 auto;padding:34px 20px 70px}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:22px}
+.hero-kicker{font-size:12px;font-weight:900;letter-spacing:.16em;color:var(--gold);margin-bottom:8px}
+.hero h1{font-size:clamp(30px,5vw,48px);line-height:1.08;margin:0 0 10px;font-weight:950;letter-spacing:-.04em}
+.hero p{margin:0;color:var(--muted);font-size:15px}
+.rule-badge{padding:11px 15px;border:1px solid #36506f;border-radius:999px;background:rgba(13,27,48,.8);color:#c8d7e9;font-weight:800;white-space:nowrap}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,.8fr);gap:18px;align-items:start}
+.card{background:linear-gradient(180deg,rgba(17,31,53,.96),rgba(9,20,35,.96));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.main-card{padding:20px}
+.side-card{padding:20px;position:sticky;top:18px}
+.section-head{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:16px}
+.section-head h2{font-size:19px;margin:0;font-weight:900;letter-spacing:-.02em}
+.section-head span{font-size:12px;color:var(--muted)}
+.clan-row{display:flex;gap:10px;margin-bottom:14px}
+.text-input{width:100%;background:#081321;color:var(--text);border:1px solid #2b405c;border-radius:12px;padding:12px 14px;outline:none}
+.text-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(102,215,255,.1)}
+.players{display:grid;gap:12px}
+.player-card{background:linear-gradient(180deg,#0b182a,#091421);border:1px solid #223750;border-radius:16px;padding:14px;transition:.2s}
+.player-card.adjust-up{border-color:#8c6630;box-shadow:inset 0 0 0 1px rgba(255,173,92,.08)}
+.player-card.adjust-down{border-color:#2e5a82;box-shadow:inset 0 0 0 1px rgba(107,168,255,.08)}
+.player-top{display:grid;grid-template-columns:42px minmax(130px,1fr) minmax(180px,1.1fr) 86px 38px;gap:10px;align-items:center}
+.index{height:38px;width:38px;border-radius:11px;background:#152945;color:var(--gold);display:grid;place-items:center;font-weight:950}
+.tier-btn{height:42px;border:1px solid #324a69;background:#0a1728;color:#dce9f8;border-radius:11px;text-align:left;padding:0 12px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tier-btn:hover{border-color:#4b678d}
+.score-box{text-align:right}
+.score-box .score{font-size:23px;font-weight:950;color:var(--gold2);line-height:1}
+.score-box .sub{font-size:11px;color:var(--muted);margin-top:4px}
+.remove{height:38px;width:38px;border-radius:10px;border:1px solid #334b67;background:#101d2f;color:#9db0c7}
+.remove:hover{color:#fff;border-color:#59728f}
+.player-bottom{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.group-label{font-size:11px;color:var(--muted);margin-bottom:7px;font-weight:800}
+.segment{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.segment.adjust{grid-template-columns:repeat(3,1fr)}
+.seg-btn{min-height:38px;border:1px solid #2b405b;background:#0b1727;color:#aebfd3;border-radius:9px;font-size:12px;font-weight:850;padding:8px 6px}
+.seg-btn.active{background:linear-gradient(180deg,#223b60,#192f4d);color:#fff;border-color:#5d7fa8}
+.seg-btn.up.active{background:#3a2a16;border-color:#9a6c32;color:#ffd69a}
+.seg-btn.down.active{background:#10283e;border-color:#3974a8;color:#b9ddff}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.btn{border:0;border-radius:11px;padding:11px 15px;font-weight:900;background:#17304d;color:#deebf8}
+.btn.primary{background:linear-gradient(135deg,#e8b944,#f7d56f);color:#151c27}
+.btn.danger{background:#391720;color:#ffb7c0}
+.btn.secondary{background:#15263e}
+.btn:hover{filter:brightness(1.08)}
+.summary-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.summary-title h2{margin:0;font-size:18px}
+.limit{font-size:12px;color:var(--muted)}
+.total-panel{padding:18px;border:1px solid #725923;border-radius:16px;background:linear-gradient(135deg,#171c1f,#2a2410);margin-bottom:12px}
+.total-label{font-size:12px;color:#cbbf9c;font-weight:800}
+.total-value{font-size:44px;font-weight:950;color:var(--gold2);letter-spacing:-.03em;margin-top:3px}
+.total-foot{display:flex;justify-content:space-between;color:#c4cfdd;font-size:12px;margin-top:6px}
+.progress{height:10px;background:#15263a;border-radius:999px;overflow:hidden;margin-top:12px}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--gold),var(--red));transition:.25s}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.metric{background:#091629;border:1px solid #233850;border-radius:13px;padding:12px}
+.metric .label{font-size:11px;color:var(--muted)}
+.metric .value{font-size:20px;font-weight:950;margin-top:3px}
+.status{margin-top:12px;padding:14px;border-radius:13px;border:1px solid #2e4b63;background:#0b1a2c}
+.status strong{display:block;font-size:15px;margin-bottom:4px}
+.status small{color:var(--muted)}
+.status.ok{border-color:#286348;background:#0a211a}.status.warn{border-color:#7f6125;background:#2b210d}.status.bad{border-color:#793247;background:#2b1118}
+.copy-result{width:100%;margin-top:12px}
+.score-table-card{margin-top:18px;padding:0;overflow:hidden}
+.table-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;background:transparent;border:0;color:var(--text);padding:18px 20px;font-weight:900;font-size:18px}
+.table-toggle small{color:var(--muted);font-size:12px;font-weight:700}
+.table-content{display:none;padding:0 20px 20px}
+.table-content.open{display:block}
+.table-tools{display:flex;gap:9px;margin-bottom:10px}
+.table-wrap{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:13px}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{padding:10px 12px;border-bottom:1px solid #20334b;text-align:right;font-size:13px}
+th{position:sticky;top:0;background:#13243a;color:#bcd0e9;z-index:2}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#0d1a2d;z-index:1}
+th:first-child{z-index:3}
+tr:last-child td{border-bottom:0}.high{color:var(--gold);font-weight:900}.note{color:var(--muted);font-size:12px;line-height:1.6;margin-top:10px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(2,7,13,.72);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.modal-backdrop.open{display:flex}
+.modal{width:min(760px,100%);max-height:88vh;overflow:auto;background:#0c1829;border:1px solid #2a405d;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid #203650;position:sticky;top:0;background:#0c1829;z-index:3}
+.modal-head h3{margin:0;font-size:19px}.modal-close{border:0;background:#16263d;color:#c7d6e8;border-radius:9px;width:38px;height:38px}
+.tier-search-wrap{padding:14px 20px 0}.tier-groups{padding:14px 20px 20px;display:grid;gap:14px}.tier-group{border:1px solid #223750;border-radius:14px;padding:12px;background:#091523}
+.tier-group h4{margin:0 0 10px;font-size:14px;color:#dce8f6}
+.tier-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.tier-choice{border:1px solid #2b405a;background:#0d1b2d;color:#bed0e4;border-radius:9px;padding:10px 6px;font-size:12px;font-weight:850}
+.tier-choice:hover{border-color:#6a88ad;color:#fff}
+.empty-tip{text-align:center;color:var(--muted);padding:18px}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.side-card{position:static}.player-top{grid-template-columns:42px 1fr 1fr 86px 38px}}
+@media(max-width:720px){.wrap{padding:22px 12px 50px}.hero{align-items:flex-start;flex-direction:column}.rule-badge{white-space:normal}.player-top{grid-template-columns:38px 1fr 38px}.player-top .text-input{grid-column:2/4}.tier-btn{grid-column:2/4}.score-box{grid-column:2;text-align:left}.remove{grid-column:3;grid-row:1}.player-bottom{grid-template-columns:1fr}.segment{grid-template-columns:repeat(5,1fr)}.metrics{grid-template-columns:1fr 1fr 1fr}.tier-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:460px){.clan-row{flex-direction:column}.actions .btn{flex:1}.metrics{grid-template-columns:1fr}.segment{grid-template-columns:repeat(3,1fr)}.segment .seg-btn:nth-child(4),.segment .seg-btn:nth-child(5){grid-column:auto}.tier-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="hero">
-    <div><div class="eyebrow">GOCHUBAT · CLAN BALANCE</div><h1>고추밭 클랜 밸런스 시뮬레이터</h1><p>최대 5명의 티어와 포지션을 넣으면 클랜 점수를 자동 계산합니다.</p></div>
-    <div class="badge">클랜 최대 5명 · 상한 150점</div>
-  </div>
-
-  <div class="card">
-    <div class="section-title"><h2>👥 클랜 구성</h2><span>닉네임은 선택사항</span></div>
-    <div class="clan-tools"><input id="clanName" placeholder="클랜 이름 (선택사항)" maxlength="30"><button class="btn" id="copyBtn">📋 결과 복사</button></div>
-    <div class="members" id="members"></div>
-    <div class="actions">
-      <button class="btn primary" id="addBtn">＋ 클랜원 추가</button>
-      <button class="btn" id="sampleBtn">예시 구성 불러오기</button>
-      <button class="btn danger" id="resetBtn">초기화</button>
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="hero-kicker">🌶️ 고추밭 클랜 관리</div>
+      <h1>고추밭 클랜 점수 계산기</h1>
+      <p>클랜원 최대 5명의 티어와 포지션을 선택하면 점수를 실시간으로 계산합니다.</p>
     </div>
+    <div class="rule-badge">클랜 최대 5명 · 기준 상한 150점</div>
+  </header>
+
+  <div class="layout">
+    <section class="card main-card">
+      <div class="section-head">
+        <h2>👥 클랜 구성</h2>
+        <span>닉네임은 선택사항입니다</span>
+      </div>
+      <div class="clan-row">
+        <input id="clanName" class="text-input" maxlength="30" placeholder="클랜 이름 (선택사항)">
+        <button class="btn secondary" id="sampleBtn" type="button">예시 불러오기</button>
+      </div>
+      <div id="players" class="players"></div>
+      <div class="actions">
+        <button class="btn primary" id="addBtn" type="button">＋ 클랜원 추가</button>
+        <button class="btn danger" id="resetBtn" type="button">전체 초기화</button>
+      </div>
+    </section>
+
+    <aside class="card side-card">
+      <div class="summary-title"><h2>⚖️ 클랜 점수 현황</h2><span class="limit">150.0점 기준</span></div>
+      <div class="total-panel">
+        <div class="total-label">클랜 총점</div>
+        <div class="total-value" id="total">0.0</div>
+        <div class="total-foot"><span id="countText">0명 선택</span><span id="remainText">150.0점 남음</span></div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="label">평균 점수</div><div class="value" id="avg">0.0</div></div>
+        <div class="metric"><div class="label">최고점</div><div class="value" id="max">0.0</div></div>
+        <div class="metric"><div class="label">점수 격차</div><div class="value" id="gap">0.0</div></div>
+      </div>
+      <div class="status ok" id="status"><strong>클랜원을 구성해 주세요.</strong><small>티어와 포지션을 선택하면 바로 계산됩니다.</small></div>
+      <button class="btn primary copy-result" id="copyBtn" type="button">📋 결과 복사</button>
+    </aside>
   </div>
 
-  <div class="card">
-    <div class="section-title"><h2>⚖️ 클랜 점수 리포트</h2><span>기준 상한 150.0점</span></div>
-    <div class="summary">
-      <div class="metric total"><div class="label">클랜 총점</div><div class="value" id="total">0.0</div></div>
-      <div class="metric"><div class="label">평균 점수</div><div class="value" id="avg">0.0</div></div>
-      <div class="metric"><div class="label">최고점</div><div class="value" id="max">0.0</div></div>
-      <div class="metric"><div class="label">점수 격차</div><div class="value" id="gap">0.0</div></div>
+  <section class="card score-table-card">
+    <button class="table-toggle" id="tableToggle" type="button">
+      <span>📊 공식 클랜 점수표</span>
+      <small id="tableToggleText">점수표 펼치기 ▼</small>
+    </button>
+    <div class="table-content" id="tableContent">
+      <div class="table-tools"><input id="scoreSearch" class="text-input" placeholder="티어 검색 (예: 마스터 1000+, 다이아1)"></div>
+      <div class="table-wrap"><table><thead><tr><th>티어</th><th>🛡️ 탑</th><th>🌲 정글</th><th>🔮 미드</th><th>🏹 원딜</th><th>👑 서폿</th></tr></thead><tbody id="scoreBody"></tbody></table></div>
+      <div class="note">⭐ 마스터는 1000점 이상까지 세분화 · 다이아 구간은 상대적으로 촘촘하게 적용</div>
     </div>
-    <div class="verdict ok" id="verdict"><strong>구성원을 추가해 주세요.</strong><small>5명까지 등록할 수 있습니다.</small></div>
-    <div class="progress"><div class="bar" id="bar"></div></div>
-  </div>
+  </section>
+</div>
 
-  <div class="card">
-    <div class="section-title"><h2>📊 공식 클랜 점수표</h2><span>라인별 가중치 적용</span></div>
-    <div class="table-search"><input id="scoreSearch" placeholder="티어 검색 (예: 마스터 1000+, 다이아1)"></div>
-    <div class="table-wrap"><table class="score-table"><thead><tr><th>티어</th><th>🛡️ TOP</th><th>🌲 JUG</th><th>🔮 MID</th><th>🏹 ADC</th><th>👑 SUP</th></tr></thead><tbody id="scoreBody"></tbody></table></div>
-    <div class="note">⭐ 마스터는 1000점 이상까지 세분화 · 다이아 구간은 상대적으로 촘촘하게 적용</div>
+<div class="modal-backdrop" id="tierModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tierModalTitle">
+    <div class="modal-head"><h3 id="tierModalTitle">티어 선택</h3><button class="modal-close" id="modalClose" type="button">✕</button></div>
+    <div class="tier-search-wrap"><input class="text-input" id="tierSearch" placeholder="티어 검색"></div>
+    <div class="tier-groups" id="tierGroups"></div>
   </div>
 </div>
+
 <script>
 const lanes=["TOP","JUG","MID","ADC","SUP"];
-const laneNames={TOP:"🛡️ TOP",JUG:"🌲 JUG",MID:"🔮 MID",ADC:"🏹 ADC",SUP:"👑 SUP"};
+const laneNames={TOP:"탑",JUG:"정글",MID:"미드",ADC:"원딜",SUP:"서폿"};
+const laneIcons={TOP:"🛡️",JUG:"🌲",MID:"🔮",ADC:"🏹",SUP:"👑"};
 
-/* 제공된 예시 점수 */
 const rows=[
-["그마/챌 2000+",53.5,52.4,53.5,53.5,51.4],
-["그마/챌 1900~1999",53.1,52.0,53.1,53.1,50.9],
-["그마/챌 1800~1899",52.3,51.3,52.3,52.3,50.2],
-["그마/챌 1700~1799",51.7,50.6,51.7,51.7,49.5],
-["그마/챌 1600~1699",50.9,49.9,50.9,50.9,48.8],
-["그마/챌 1500~1599",50.2,49.1,50.2,50.2,48.0],
-["그마/챌 1400~1499",49.5,48.5,49.5,49.5,47.4],
-["그마/챌 1300~1399",48.8,47.7,48.8,48.8,46.7],
-["그마/챌 1200~1299",48.2,47.1,48.2,48.2,46.0],
-["그마/챌 1100~1199",47.4,46.3,47.4,47.4,45.3],
-["그마/챌 1000~1099",46.7,45.6,46.7,46.7,44.5],
-["그마/챌 900~999",46.0,44.9,46.0,46.0,43.9],
-["그마/챌 800~899",45.3,44.2,45.3,45.3,43.1],
-["그마/챌 700~799",44.5,43.4,44.5,44.5,42.4],
-["그마/챌 600~699",43.9,42.8,43.9,43.9,41.7],
-["그마/챌 500~599",43.1,42.1,43.1,43.1,41.0],
-["그마/챌 400~499",42.5,41.4,42.5,42.5,40.3],
-["그마/챌 300~399",41.7,40.7,41.7,41.7,39.6],
-["그마/챌 200~299",41.0,39.9,41.0,41.0,38.8],
-["그마/챌 100~199",40.3,39.3,40.3,40.3,38.2],
-["그마/챌 0~99",39.6,38.5,39.6,39.6,37.5],
-["마스터 1000+",40.7,39.6,40.7,40.7,38.5],
-["마스터 900~999",40.1,39.1,40.1,40.1,38.0],
-["마스터 800~899",39.6,38.5,39.6,39.6,37.5],
-["마스터 700~799",39.1,38.0,39.1,39.1,36.9],
-["마스터 600~699",38.0,36.9,38.0,38.0,35.8],
-["마스터 500~599",36.9,35.8,36.9,36.9,34.8],
-["마스터 400~499",35.8,34.8,35.8,35.8,33.7],
-["마스터 300~399",35.1,34.0,35.1,35.1,33.0],
-["마스터 200~299",34.5,33.4,34.5,34.5,32.3],
-["마스터 100~199",33.8,32.7,33.8,33.8,31.7],
-["마스터 0~99",33.2,32.1,33.2,33.2,31.0],
-["다이아1",31.0,30.5,32.1,30.0,31.6],
-["다이아2",28.9,28.4,30.0,27.8,29.4],
-["다이아3",26.8,26.2,27.8,25.7,27.3],
-["다이아4",24.6,24.1,25.7,23.5,25.1],
-["에메랄드1",21.4,20.9,22.5,20.3,21.9],
-["에메랄드2",19.3,18.7,20.3,18.2,19.8],
-["에메랄드3",17.1,16.6,18.2,16.1,17.7],
-["에메랄드4",15.0,14.4,16.1,13.9,15.5],
-["플래티넘1",12.8,12.3,13.9,11.8,13.4],
-["플래티넘2",11.8,11.2,12.8,10.7,12.3],
-["플래티넘3",10.7,10.2,11.8,9.6,11.2],
-["플래티넘4",9.6,9.1,10.7,8.6,10.2],
-["골드1",8.6,8.0,9.6,7.5,9.1],
-["골드2",7.5,7.0,8.6,6.4,8.0],
-["골드3",6.4,5.9,7.5,5.4,7.0],
-["골드4",5.4,4.8,6.4,4.3,5.9],
-["실버1",4.3,4.0,4.8,3.7,4.6],
-["실버2",3.7,3.4,4.3,3.2,4.1],
-["실버3",3.2,2.9,3.7,2.7,3.5],
-["실버4",2.7,2.4,3.2,2.1,3.0],
-["브론즈1",2.1,1.9,2.7,1.7,2.4],
-["브론즈2",1.8,1.6,2.4,1.4,2.0],
-["브론즈3",1.5,1.3,2.0,1.2,1.7],
-["브론즈4",1.2,1.0,1.7,1.0,1.4]
+["그마/챌 2000+",53.5,52.4,53.5,53.5,51.4],["그마/챌 1900~1999",53.1,52.0,53.1,53.1,50.9],["그마/챌 1800~1899",52.3,51.3,52.3,52.3,50.2],["그마/챌 1700~1799",51.7,50.6,51.7,51.7,49.5],["그마/챌 1600~1699",50.9,49.9,50.9,50.9,48.8],["그마/챌 1500~1599",50.2,49.1,50.2,50.2,48.0],["그마/챌 1400~1499",49.5,48.5,49.5,49.5,47.4],["그마/챌 1300~1399",48.8,47.7,48.8,48.8,46.7],["그마/챌 1200~1299",48.2,47.1,48.2,48.2,46.0],["그마/챌 1100~1199",47.4,46.3,47.4,47.4,45.3],["그마/챌 1000~1099",46.7,45.6,46.7,46.7,44.5],["그마/챌 900~999",46.0,44.9,46.0,46.0,43.9],["그마/챌 800~899",45.3,44.2,45.3,45.3,43.1],["그마/챌 700~799",44.5,43.4,44.5,44.5,42.4],["그마/챌 600~699",43.9,42.8,43.9,43.9,41.7],["그마/챌 500~599",43.1,42.1,43.1,43.1,41.0],["그마/챌 400~499",42.5,41.4,42.5,42.5,40.3],["그마/챌 300~399",41.7,40.7,41.7,41.7,39.6],["그마/챌 200~299",41.0,39.9,41.0,41.0,38.8],["그마/챌 100~199",40.3,39.3,40.3,40.3,38.2],["그마/챌 0~99",39.6,38.5,39.6,39.6,37.5],
+["마스터 1000+",40.7,39.6,40.7,40.7,38.5],["마스터 900~999",40.1,39.1,40.1,40.1,38.0],["마스터 800~899",39.6,38.5,39.6,39.6,37.5],["마스터 700~799",39.1,38.0,39.1,39.1,36.9],["마스터 600~699",38.0,36.9,38.0,38.0,35.8],["마스터 500~599",36.9,35.8,36.9,36.9,34.8],["마스터 400~499",35.8,34.8,35.8,35.8,33.7],["마스터 300~399",35.1,34.0,35.1,35.1,33.0],["마스터 200~299",34.5,33.4,34.5,34.5,32.3],["마스터 100~199",33.8,32.7,33.8,33.8,31.7],["마스터 0~99",33.2,32.1,33.2,33.2,31.0],
+["다이아1",31.0,30.5,32.1,30.0,31.6],["다이아2",28.9,28.4,30.0,27.8,29.4],["다이아3",26.8,26.2,27.8,25.7,27.3],["다이아4",24.6,24.1,25.7,23.5,25.1],
+["에메랄드1",21.4,20.9,22.5,20.3,21.9],["에메랄드2",19.3,18.7,20.3,18.2,19.8],["에메랄드3",17.1,16.6,18.2,16.1,17.7],["에메랄드4",15.0,14.4,16.1,13.9,15.5],
+["플래티넘1",12.8,12.3,13.9,11.8,13.4],["플래티넘2",11.8,11.2,12.8,10.7,12.3],["플래티넘3",10.7,10.2,11.8,9.6,11.2],["플래티넘4",9.6,9.1,10.7,8.6,10.2],
+["골드1",8.6,8.0,9.6,7.5,9.1],["골드2",7.5,7.0,8.6,6.4,8.0],["골드3",6.4,5.9,7.5,5.4,7.0],["골드4",5.4,4.8,6.4,4.3,5.9],
+["실버1",4.3,4.0,4.8,3.7,4.6],["실버2",3.7,3.4,4.3,3.2,4.1],["실버3",3.2,2.9,3.7,2.7,3.5],["실버4",2.7,2.4,3.2,2.1,3.0],
+["브론즈1",2.1,1.9,2.7,1.7,2.4],["브론즈2",1.8,1.6,2.4,1.4,2.0],["브론즈3",1.5,1.3,2.0,1.2,1.7],["브론즈4",1.2,1.0,1.7,1.0,1.4]
 ];
-
-const tierList=rows.map(r=>r[0]);
 const data={}; rows.forEach(r=>data[r[0]]={TOP:r[1],JUG:r[2],MID:r[3],ADC:r[4],SUP:r[5]});
+const tierList=rows.map(r=>r[0]);
+const state=[];
+let activeTierIndex=null;
 
-const membersEl=document.getElementById("members");
-function makeSelect(options,placeholder){
- const s=document.createElement("select"); s.innerHTML=`<option value="">${placeholder}</option>`+options.map(x=>`<option>${x}</option>`).join(""); return s;
+const playersEl=document.getElementById('players');
+function addPlayer(v={}){
+  if(state.length>=5) return;
+  state.push({name:v.name||'',tier:v.tier||'',lane:v.lane||'',adjust:v.adjust||0});
+  renderPlayers();
 }
-function addMember(v={}){
- if(membersEl.children.length>=5) return;
- const i=membersEl.children.length+1;
- const row=document.createElement("div"); row.className="member";
- const num=document.createElement("div"); num.className="num"; num.textContent=i;
- const name=document.createElement("input"); name.placeholder="닉네임"; name.value=v.name||"";
- const tier=makeSelect(tierList,"티어 선택"); tier.value=v.tier||"";
- const lane=makeSelect(lanes.map(x=>laneNames[x]+"|"+x),"라인 선택");
- // visible label + internal value
- lane.innerHTML='<option value="">라인 선택</option>'+lanes.map(x=>`<option value="${x}">${laneNames[x]}</option>`).join("");
- lane.value=v.lane||"";
- const score=document.createElement("div"); score.className="score"; score.textContent="0.0";
- const remove=document.createElement("button"); remove.className="remove"; remove.textContent="×"; remove.title="삭제";
- remove.onclick=()=>{row.remove();renumber();calc();};
- [num,name,tier,lane,score,remove].forEach(x=>row.appendChild(x));
- [name,tier,lane].forEach(x=>x.addEventListener("input",calc));
- membersEl.appendChild(row); calc();
+function removePlayer(i){state.splice(i,1);if(!state.length)addPlayer();else renderPlayers();}
+function setLane(i,lane){state[i].lane=lane;renderPlayers();}
+function setAdjust(i,val){state[i].adjust=state[i].adjust===val?0:val;renderPlayers();}
+function openTierModal(i){activeTierIndex=i;document.getElementById('tierSearch').value='';renderTierGroups('');document.getElementById('tierModal').classList.add('open');document.getElementById('tierModal').setAttribute('aria-hidden','false');}
+function closeTierModal(){document.getElementById('tierModal').classList.remove('open');document.getElementById('tierModal').setAttribute('aria-hidden','true');activeTierIndex=null;}
+function tierGroupName(t){if(t.startsWith('그마/챌'))return '그랜드마스터 / 챌린저';if(t.startsWith('마스터'))return '마스터';if(t.startsWith('다이아'))return '다이아';if(t.startsWith('에메랄드'))return '에메랄드';if(t.startsWith('플래티넘'))return '플래티넘';if(t.startsWith('골드'))return '골드';if(t.startsWith('실버'))return '실버';return '브론즈';}
+function renderTierGroups(q=''){
+  const box=document.getElementById('tierGroups');
+  const filtered=tierList.filter(t=>t.toLowerCase().includes(q.toLowerCase()));
+  const groups={};filtered.forEach(t=>(groups[tierGroupName(t)]??=[]).push(t));
+  box.innerHTML='';
+  Object.entries(groups).forEach(([name,items])=>{
+    const g=document.createElement('div');g.className='tier-group';
+    const h=document.createElement('h4');h.textContent=name;g.appendChild(h);
+    const grid=document.createElement('div');grid.className='tier-grid';
+    items.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='tier-choice';b.textContent=t;b.addEventListener('click',()=>{if(activeTierIndex!==null){state[activeTierIndex].tier=t;renderPlayers();closeTierModal();}});grid.appendChild(b)});
+    g.appendChild(grid);box.appendChild(g);
+  });
+  if(!filtered.length) box.innerHTML='<div class="empty-tip">검색 결과가 없습니다.</div>';
 }
-function renumber(){[...membersEl.children].forEach((r,i)=>r.querySelector(".num").textContent=i+1);}
+function scoreOf(p){if(!p.tier||!p.lane)return 0;return Math.max(0,data[p.tier][p.lane]+p.adjust)}
+function renderPlayers(){
+  playersEl.innerHTML='';
+  state.forEach((p,i)=>{
+    const card=document.createElement('div');card.className='player-card'+(p.adjust===5?' adjust-up':p.adjust===-3?' adjust-down':'');
+    const top=document.createElement('div');top.className='player-top';
+    const idx=document.createElement('div');idx.className='index';idx.textContent=i+1;
+    const name=document.createElement('input');name.className='text-input';name.placeholder='닉네임';name.value=p.name;name.addEventListener('input',e=>{state[i].name=e.target.value});
+    const tier=document.createElement('button');tier.type='button';tier.className='tier-btn';tier.innerHTML=`<span>${p.tier||'티어 선택'}</span><span>▾</span>`;tier.addEventListener('click',()=>openTierModal(i));
+    const sb=document.createElement('div');sb.className='score-box';sb.innerHTML=`<div class="score">${scoreOf(p).toFixed(1)}</div><div class="sub">${p.adjust?`보정 ${p.adjust>0?'+':''}${p.adjust}점`:'기본 점수'}</div>`;
+    const rm=document.createElement('button');rm.type='button';rm.className='remove';rm.textContent='×';rm.title='삭제';rm.addEventListener('click',()=>removePlayer(i));
+    [idx,name,tier,sb,rm].forEach(x=>top.appendChild(x));
+    const bottom=document.createElement('div');bottom.className='player-bottom';
+    const laneWrap=document.createElement('div');laneWrap.innerHTML='<div class="group-label">포지션</div>';
+    const laneSeg=document.createElement('div');laneSeg.className='segment';
+    lanes.forEach(l=>{const b=document.createElement('button');b.type='button';b.className='seg-btn'+(p.lane===l?' active':'');b.textContent=`${laneIcons[l]} ${laneNames[l]}`;b.addEventListener('click',()=>setLane(i,l));laneSeg.appendChild(b)});laneWrap.appendChild(laneSeg);
+    const adjWrap=document.createElement('div');adjWrap.innerHTML='<div class="group-label">티어 보정</div>';
+    const adjSeg=document.createElement('div');adjSeg.className='segment adjust';
+    [[0,'기본',null],[5,'상향 +5','up'],[-3,'하향 -3','down']].forEach(([v,label,cls])=>{const b=document.createElement('button');b.type='button';b.className='seg-btn'+(cls?' '+cls:'')+(p.adjust===v?' active':'');b.textContent=label;b.addEventListener('click',()=>{state[i].adjust=v;renderPlayers()});adjSeg.appendChild(b)});adjWrap.appendChild(adjSeg);
+    bottom.appendChild(laneWrap);bottom.appendChild(adjWrap);
+    card.appendChild(top);card.appendChild(bottom);playersEl.appendChild(card);
+  });
+  calc();
+}
 function calc(){
- let total=0, vals=[];
- [...membersEl.children].forEach(r=>{
-  const tier=r.children[2].value, lane=r.children[3].value;
-  const s=tier&&lane?data[tier][lane]:0;
-  r.querySelector(".score").textContent=s.toFixed(1);
-  if(s){total+=s;vals.push(s);}
- });
- const avg=vals.length?total/vals.length:0,max=vals.length?Math.max(...vals):0,min=vals.length?Math.min(...vals):0,gap=vals.length?max-min:0;
- const upperCount=[...membersEl.children].filter(r=>{
-   const t=r.children[2].value;
-   return t.startsWith("그마/챌")||t.startsWith("마스터");
- }).length;
-
- document.getElementById("total").textContent=total.toFixed(1);
- document.getElementById("avg").textContent=avg.toFixed(1);
- document.getElementById("max").textContent=max.toFixed(1);
- document.getElementById("gap").textContent=gap.toFixed(1);
- const verdict=document.getElementById("verdict");
- if(!vals.length){verdict.className="verdict ok";verdict.innerHTML="<strong>구성원을 추가해 주세요.</strong><small>티어와 라인을 선택하면 실시간으로 계산됩니다.</small>";}
- else if(total>150){verdict.className="verdict bad";verdict.innerHTML=`<strong>🔴 상한 초과 — ${(total-150).toFixed(1)}점 초과</strong><small>현재 ${vals.length}명 · 최대 허용 150.0점</small>`;}
- else if(upperCount>=4){verdict.className="verdict bad";verdict.innerHTML=`<strong>🔴 상위 티어 집중 — 마/그/챌 ${upperCount}명</strong><small>마스터 이상은 최대 3명까지 권장하는 고추밭 기준입니다.</small>`;}
- else if(total>=135){verdict.className="verdict warn";verdict.innerHTML=`<strong>🟠 상한에 가까운 클랜</strong><small>150점까지 ${(150-total).toFixed(1)}점 남았습니다.</small>`;}
- else if(total>=105){verdict.className="verdict ok";verdict.innerHTML=`<strong>🟡 중상위 밸런스</strong><small>현재 ${vals.length}명 · 상한까지 ${(150-total).toFixed(1)}점</small>`;}
- else {verdict.className="verdict ok";verdict.innerHTML=`<strong>🟢 안정적인 점수 구간</strong><small>현재 ${vals.length}명 · 상한까지 ${(150-total).toFixed(1)}점</small>`;}
- document.getElementById("bar").style.width=Math.min(total/150*100,100)+"%";
+  const vals=state.map(scoreOf).filter(v=>v>0);const total=vals.reduce((a,b)=>a+b,0);const avg=vals.length?total/vals.length:0;const max=vals.length?Math.max(...vals):0;const min=vals.length?Math.min(...vals):0;const gap=vals.length?max-min:0;
+  document.getElementById('total').textContent=total.toFixed(1);document.getElementById('avg').textContent=avg.toFixed(1);document.getElementById('max').textContent=max.toFixed(1);document.getElementById('gap').textContent=gap.toFixed(1);
+  document.getElementById('countText').textContent=`${vals.length}명 선택`;document.getElementById('remainText').textContent=total>150?`${(total-150).toFixed(1)}점 초과`:`${(150-total).toFixed(1)}점 남음`;document.getElementById('bar').style.width=Math.min(total/150*100,100)+'%';
+  const s=document.getElementById('status');
+  if(!vals.length){s.className='status ok';s.innerHTML='<strong>클랜원을 구성해 주세요.</strong><small>티어와 포지션을 선택하면 바로 계산됩니다.</small>'}
+  else if(total>150){s.className='status bad';s.innerHTML=`<strong>🔴 기준 상한 초과</strong><small>현재 ${(total-150).toFixed(1)}점 초과했습니다.</small>`}
+  else if(total>=135){s.className='status warn';s.innerHTML=`<strong>🟠 상한에 가까운 구성입니다.</strong><small>150점까지 ${(150-total).toFixed(1)}점 남았습니다.</small>`}
+  else{s.className='status ok';s.innerHTML=`<strong>🟢 현재 기준 내 구성입니다.</strong><small>${vals.length}명 기준 · 150점까지 ${(150-total).toFixed(1)}점 남았습니다.</small>`}
 }
-function reset(){membersEl.innerHTML="";for(let i=0;i<5;i++)addMember();}
-document.getElementById("addBtn").onclick=()=>addMember();
-document.getElementById("resetBtn").onclick=reset;
-document.getElementById("sampleBtn").onclick=()=>{
- membersEl.innerHTML="";
- [
-  {name:"예시 TOP",tier:"다이아1",lane:"TOP"},
-  {name:"예시 JUG",tier:"에메랄드2",lane:"JUG"},
-  {name:"예시 MID",tier:"마스터 1000+",lane:"MID"},
-  {name:"예시 ADC",tier:"플래티넘1",lane:"ADC"},
-  {name:"예시 SUP",tier:"골드2",lane:"SUP"}
- ].forEach(addMember);
-};
-const body=document.getElementById("scoreBody");
-rows.forEach((r,idx)=>{
- const tr=document.createElement("tr");
- r.forEach((x,i)=>{const td=document.createElement("td");td.textContent=i===0?x:Number(x).toFixed(1);if(i>0&&idx<5)td.className="high";tr.appendChild(td)});
- body.appendChild(tr);
+function reset(){state.length=0;for(let i=0;i<5;i++)addPlayer();}
+
+document.getElementById('addBtn').addEventListener('click',()=>addPlayer());
+document.getElementById('resetBtn').addEventListener('click',reset);
+document.getElementById('sampleBtn').addEventListener('click',()=>{state.length=0;[
+{name:'예시 탑',tier:'다이아1',lane:'TOP',adjust:0},{name:'예시 정글',tier:'에메랄드2',lane:'JUG',adjust:0},{name:'예시 미드',tier:'마스터 1000+',lane:'MID',adjust:5},{name:'예시 원딜',tier:'플래티넘1',lane:'ADC',adjust:0},{name:'예시 서폿',tier:'골드2',lane:'SUP',adjust:-3}
+].forEach(x=>state.push(x));renderPlayers();});
+
+document.getElementById('copyBtn').addEventListener('click',async()=>{
+  const clan=document.getElementById('clanName').value.trim()||'이름 없는 클랜';
+  const total=document.getElementById('total').textContent;const lines=[`[고추밭 클랜] ${clan}`,`총점: ${total} / 150.0`,""];
+  state.forEach((p,i)=>{const adj=p.adjust?` / ${p.adjust>0?'상향 +5점':'하향 -3점'}`:'';lines.push(`${i+1}. ${p.name||`클랜원 ${i+1}`} / ${p.lane?laneNames[p.lane]:'미선택'} / ${p.tier||'미선택'}${adj} / ${scoreOf(p).toFixed(1)}점`)});
+  const text=lines.join('\n');try{await navigator.clipboard.writeText(text);const b=document.getElementById('copyBtn');const old=b.textContent;b.textContent='✅ 복사 완료';setTimeout(()=>b.textContent=old,1200)}catch(e){alert(text)}
 });
 
-document.getElementById("copyBtn").onclick=async()=>{
- const name=document.getElementById("clanName").value.trim()||"이름 없는 클랜";
- const lines=[`[고추밭 클랜] ${name}`,`총점: ${document.getElementById("total").textContent} / 150.0`,""];
- [...membersEl.children].forEach((r,i)=>{
-   const nick=r.children[1].value.trim()||`클랜원 ${i+1}`;
-   const tier=r.children[2].value||"미선택";
-   const lane=r.children[3].value||"미선택";
-   const score=r.querySelector(".score").textContent;
-   lines.push(`${i+1}. ${nick} / ${lane} / ${tier} / ${score}점`);
- });
- const text=lines.join("\n");
- try{await navigator.clipboard.writeText(text);const b=document.getElementById("copyBtn");b.textContent="✅ 복사 완료";setTimeout(()=>b.textContent="📋 결과 복사",1200)}catch(e){alert(text)}
-};
-document.getElementById("scoreSearch").addEventListener("input",e=>{
- const q=e.target.value.trim().toLowerCase();
- [...document.querySelectorAll("#scoreBody tr")].forEach(tr=>{tr.style.display=(!q||tr.cells[0].textContent.toLowerCase().includes(q))?"":"none";});
-});
+document.getElementById('modalClose').addEventListener('click',closeTierModal);
+document.getElementById('tierModal').addEventListener('click',e=>{if(e.target.id==='tierModal')closeTierModal()});
+document.getElementById('tierSearch').addEventListener('input',e=>renderTierGroups(e.target.value.trim()));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeTierModal()});
+
+document.getElementById('tableToggle').addEventListener('click',()=>{const c=document.getElementById('tableContent');const open=c.classList.toggle('open');document.getElementById('tableToggleText').textContent=open?'점수표 접기 ▲':'점수표 펼치기 ▼'});
+const scoreBody=document.getElementById('scoreBody');rows.forEach((r,idx)=>{const tr=document.createElement('tr');r.forEach((x,i)=>{const td=document.createElement('td');td.textContent=i===0?x:Number(x).toFixed(1);if(i>0&&idx<5)td.className='high';tr.appendChild(td)});scoreBody.appendChild(tr)});
+document.getElementById('scoreSearch').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();[...scoreBody.querySelectorAll('tr')].forEach(tr=>{tr.style.display=(!q||tr.cells[0].textContent.toLowerCase().includes(q))?'':'none'})});
 reset();
 </script>
 </body>
