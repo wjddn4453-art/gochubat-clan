@@ -80,7 +80,7 @@ button{cursor:pointer}
 .status strong{display:block;font-size:15px;margin-bottom:4px}
 .status small{color:var(--muted)}
 .status.ok{border-color:#286348;background:#0a211a}.status.warn{border-color:#7f6125;background:#2b210d}.status.bad{border-color:#793247;background:#2b1118}
-.copy-result{width:100%;margin-top:12px}
+.image-result{width:100%;margin-top:12px}
 .score-table-card{margin-top:18px;padding:0;overflow:hidden}
 .table-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;background:transparent;border:0;color:var(--text);padding:18px 20px;font-weight:900;font-size:18px}
 .table-toggle small{color:var(--muted);font-size:12px;font-weight:700}
@@ -152,7 +152,7 @@ tr:last-child td{border-bottom:0}.high{color:var(--gold);font-weight:900}.note{c
         <div class="metric"><div class="label">점수 격차</div><div class="value" id="gap">0.0</div></div>
       </div>
       <div class="status ok" id="status"><strong>클랜원을 구성해 주세요.</strong><small>티어와 포지션을 선택하면 바로 계산됩니다.</small></div>
-      <button class="btn primary copy-result" id="copyBtn" type="button">📋 결과 복사</button>
+      <button class="btn primary image-result" id="imageBtn" type="button">📸 결과 이미지 저장</button>
     </aside>
   </div>
 
@@ -265,11 +265,51 @@ document.getElementById('sampleBtn').addEventListener('click',()=>{state.length=
 {name:'예시 탑',tier:'다이아1',lane:'TOP',adjust:0},{name:'예시 정글',tier:'에메랄드2',lane:'JUG',adjust:0},{name:'예시 미드',tier:'마스터 1000+',lane:'MID',adjust:5},{name:'예시 원딜',tier:'플래티넘1',lane:'ADC',adjust:0},{name:'예시 서폿',tier:'골드2',lane:'SUP',adjust:-3}
 ].forEach(x=>state.push(x));renderPlayers();});
 
-document.getElementById('copyBtn').addEventListener('click',async()=>{
+
+function roundedRect(ctx,x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
+}
+function fitText(ctx,text,maxWidth,startSize,minSize=22){
+  let size=startSize;do{ctx.font=`800 ${size}px Pretendard, \"Noto Sans KR\", Arial, sans-serif`;if(ctx.measureText(text).width<=maxWidth)return size;size-=2}while(size>=minSize);return minSize;
+}
+function buildResultImage(){
+  const selected=state.map((p,i)=>({...p,index:i+1,score:scoreOf(p)})).filter(p=>p.score>0);
+  if(!selected.length){alert('이미지로 저장할 클랜원을 먼저 구성해 주세요.');return null;}
   const clan=document.getElementById('clanName').value.trim()||'이름 없는 클랜';
-  const total=document.getElementById('total').textContent;const lines=[`[고추밭 클랜] ${clan}`,`총점: ${total} / 150.0`,""];
-  state.forEach((p,i)=>{const adj=p.adjust?` / ${p.adjust>0?'상향 +5점':'하향 -3점'}`:'';lines.push(`${i+1}. ${p.name||`클랜원 ${i+1}`} / ${p.lane?laneNames[p.lane]:'미선택'} / ${p.tier||'미선택'}${adj} / ${scoreOf(p).toFixed(1)}점`)});
-  const text=lines.join('\n');try{await navigator.clipboard.writeText(text);const b=document.getElementById('copyBtn');const old=b.textContent;b.textContent='✅ 복사 완료';setTimeout(()=>b.textContent=old,1200)}catch(e){alert(text)}
+  const total=selected.reduce((a,p)=>a+p.score,0);const avg=total/selected.length;const max=Math.max(...selected.map(p=>p.score));const min=Math.min(...selected.map(p=>p.score));const gap=max-min;
+  const W=1400,H=960;const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');
+  const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#07101f');bg.addColorStop(.55,'#0b1728');bg.addColorStop(1,'#050b14');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const glow=ctx.createRadialGradient(170,30,0,170,30,520);glow.addColorStop(0,'rgba(37,82,135,.40)');glow.addColorStop(1,'rgba(7,16,31,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#f2c45a';ctx.font='900 24px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('🌶️ 고추밭 클랜 점수 계산기',78,78);
+  const titleSize=fitText(ctx,clan,760,56,34);ctx.font=`950 ${titleSize}px Pretendard, \"Noto Sans KR\", Arial, sans-serif`;ctx.fillStyle='#eef5ff';ctx.fillText(clan,78,145);
+  ctx.fillStyle='#8da3bf';ctx.font='700 22px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(`클랜원 ${selected.length}명 · 기준 상한 150.0점`,80,186);
+  roundedRect(ctx,930,58,390,170,26);ctx.fillStyle='#171c1f';ctx.fill();ctx.strokeStyle='#725923';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#cbbf9c';ctx.font='800 19px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('클랜 총점',970,100);
+  ctx.fillStyle='#ffd979';ctx.font='950 70px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(total.toFixed(1),968,174);
+  ctx.fillStyle='#aab8c9';ctx.font='700 18px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(total>150?`${(total-150).toFixed(1)}점 초과`:`${(150-total).toFixed(1)}점 남음`,1145,199);
+  const listX=78,listY=260,listW=840,rowH=108;
+  ctx.fillStyle='#8da3bf';ctx.font='800 18px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('클랜 구성',listX,listY-18);
+  selected.forEach((p,idx)=>{
+    const y=listY+idx*rowH;roundedRect(ctx,listX,y,listW,92,18);ctx.fillStyle='#0a1728';ctx.fill();ctx.strokeStyle=p.adjust===5?'#8c6630':p.adjust===-3?'#2e5a82':'#243a55';ctx.lineWidth=2;ctx.stroke();
+    roundedRect(ctx,listX+18,y+19,54,54,14);ctx.fillStyle='#152945';ctx.fill();ctx.fillStyle='#f2c45a';ctx.font='950 24px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.textAlign='center';ctx.fillText(String(idx+1),listX+45,y+54);ctx.textAlign='left';
+    const nick=p.name||`클랜원 ${p.index}`;ctx.fillStyle='#eef5ff';ctx.font='900 25px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(nick,listX+92,y+38);
+    ctx.fillStyle='#8da3bf';ctx.font='700 17px Pretendard, "Noto Sans KR", Arial, sans-serif';const adj=p.adjust===5?' · 티어 상향 +5점':p.adjust===-3?' · 티어 하향 -3점':'';ctx.fillText(`${laneNames[p.lane]} · ${p.tier}${adj}`,listX+92,y+68);
+    ctx.fillStyle='#ffd979';ctx.font='950 31px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.textAlign='right';ctx.fillText(`${p.score.toFixed(1)}점`,listX+listW-24,y+57);ctx.textAlign='left';
+  });
+  const sx=955,sy=286,sw=365;ctx.fillStyle='#8da3bf';ctx.font='800 18px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('점수 요약',sx,sy-18);
+  const metrics=[['평균 점수',avg.toFixed(1)],['최고점',max.toFixed(1)],['점수 격차',gap.toFixed(1)]];
+  metrics.forEach((m,i)=>{const y=sy+i*112;roundedRect(ctx,sx,y,sw,94,18);ctx.fillStyle='#091629';ctx.fill();ctx.strokeStyle='#233850';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#8da3bf';ctx.font='700 17px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(m[0],sx+22,y+31);ctx.fillStyle='#eef5ff';ctx.font='950 35px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(m[1],sx+22,y+70)});
+  const statusY=sy+354;roundedRect(ctx,sx,statusY,sw,135,18);ctx.fillStyle=total>150?'#2b1118':total>=135?'#2b210d':'#0a211a';ctx.fill();ctx.strokeStyle=total>150?'#793247':total>=135?'#7f6125':'#286348';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=total>150?'#ff8b9b':total>=135?'#f2c45a':'#55d89b';ctx.beginPath();ctx.arc(sx+28,statusY+34,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#eef5ff';ctx.font='900 21px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(total>150?'기준 상한을 초과했습니다.':total>=135?'상한에 가까운 구성입니다.':'현재 기준 내 구성입니다.',sx+50,statusY+42);ctx.fillStyle='#9cafc5';ctx.font='700 16px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(total>150?`${(total-150).toFixed(1)}점 초과`:`150점까지 ${(150-total).toFixed(1)}점 남음`,sx+22,statusY+78);
+  const px=sx+22,py=statusY+96,pw=sw-44;roundedRect(ctx,px,py,pw,12,6);ctx.fillStyle='#15263a';ctx.fill();const fill=Math.min(total/150,1)*pw;if(fill>0){const grad=ctx.createLinearGradient(px,0,px+pw,0);grad.addColorStop(0,'#55d89b');grad.addColorStop(.65,'#f2c45a');grad.addColorStop(1,'#ff6a7f');roundedRect(ctx,px,py,fill,12,6);ctx.fillStyle=grad;ctx.fill()}
+  ctx.strokeStyle='#20344d';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(78,842);ctx.lineTo(1320,842);ctx.stroke();ctx.fillStyle='#71869f';ctx.font='700 16px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('고추밭 클랜 점수 기준 · 티어/포지션 및 보정 점수 반영',78,882);ctx.textAlign='right';ctx.fillText('최대 5명 · 상한 150점',1320,882);ctx.textAlign='left';
+  return {canvas,clan};
+}
+
+document.getElementById('imageBtn').addEventListener('click',()=>{
+  const result=buildResultImage();if(!result)return;
+  const {canvas,clan}=result;const safe=(clan||'클랜').replace(/[\\/:*?\"<>|]/g,'_').slice(0,30);
+  canvas.toBlob(blob=>{if(!blob){alert('이미지 생성에 실패했습니다.');return;}const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`고추밭_${safe}_점수결과.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);const b=document.getElementById('imageBtn');const old=b.textContent;b.textContent='✅ 이미지 저장 완료';setTimeout(()=>b.textContent=old,1400)},'image/png');
 });
 
 document.getElementById('modalClose').addEventListener('click',closeTierModal);
