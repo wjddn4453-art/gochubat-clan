@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>고추밭 클랜 점수 계산기</title>
+<style>
+:root{
+  --bg:#07101f;--bg2:#0b1627;--panel:#0f1d31;--panel2:#12233b;--line:#263a55;
+  --text:#eef5ff;--muted:#8da3bf;--gold:#f2c45a;--gold2:#ffd979;--cyan:#66d7ff;
+  --green:#55d89b;--red:#ff6a7f;--orange:#ffad5c;--blue:#6ba8ff;--radius:20px;
+  --shadow:0 18px 50px rgba(0,0,0,.28)
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:
+  radial-gradient(circle at 15% -10%,#16365e 0,transparent 32%),
+  radial-gradient(circle at 95% 10%,#122846 0,transparent 28%),
+  linear-gradient(180deg,#07101f 0%,#050b14 100%);
+  color:var(--text);font-family:Pretendard,"Noto Sans KR",Inter,system-ui,sans-serif;min-height:100vh}
+button,input{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1240px;margin:0 auto;padding:34px 20px 70px}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:22px}
+.hero-kicker{font-size:12px;font-weight:900;letter-spacing:.16em;color:var(--gold);margin-bottom:8px}
+.hero h1{font-size:clamp(30px,5vw,48px);line-height:1.08;margin:0 0 10px;font-weight:950;letter-spacing:-.04em}
+.hero p{margin:0;color:var(--muted);font-size:15px}
+.rule-badge{padding:11px 15px;border:1px solid #36506f;border-radius:999px;background:rgba(13,27,48,.8);color:#c8d7e9;font-weight:800;white-space:nowrap}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,.8fr);gap:18px;align-items:start}
+.card{background:linear-gradient(180deg,rgba(17,31,53,.96),rgba(9,20,35,.96));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.main-card{padding:20px}
+.side-card{padding:20px;position:sticky;top:18px}
+.section-head{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:16px}
+.section-head h2{font-size:19px;margin:0;font-weight:900;letter-spacing:-.02em}
+.section-head span{font-size:12px;color:var(--muted)}
+.clan-row{display:flex;gap:10px;margin-bottom:14px}
+.text-input{width:100%;background:#081321;color:var(--text);border:1px solid #2b405c;border-radius:12px;padding:12px 14px;outline:none}
+.text-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(102,215,255,.1)}
+.players{display:grid;gap:12px}
+.player-card{background:linear-gradient(180deg,#0b182a,#091421);border:1px solid #223750;border-radius:16px;padding:14px;transition:.2s}
+.player-card.adjust-up{border-color:#8c6630;box-shadow:inset 0 0 0 1px rgba(255,173,92,.08)}
+.player-card.adjust-down{border-color:#2e5a82;box-shadow:inset 0 0 0 1px rgba(107,168,255,.08)}
+.player-top{display:grid;grid-template-columns:42px minmax(130px,1fr) minmax(180px,1.1fr) 86px 38px;gap:10px;align-items:center}
+.index{height:38px;width:38px;border-radius:11px;background:#152945;color:var(--gold);display:grid;place-items:center;font-weight:950}
+.tier-btn{height:42px;border:1px solid #324a69;background:#0a1728;color:#dce9f8;border-radius:11px;text-align:left;padding:0 12px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tier-btn:hover{border-color:#4b678d}
+.score-box{text-align:right}
+.score-box .score{font-size:23px;font-weight:950;color:var(--gold2);line-height:1}
+.score-box .sub{font-size:11px;color:var(--muted);margin-top:4px}
+.remove{height:38px;width:38px;border-radius:10px;border:1px solid #334b67;background:#101d2f;color:#9db0c7}
+.remove:hover{color:#fff;border-color:#59728f}
+.player-bottom{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.group-label{font-size:11px;color:var(--muted);margin-bottom:7px;font-weight:800}
+.segment{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.segment.adjust{grid-template-columns:repeat(3,1fr)}
+.seg-btn{min-height:38px;border:1px solid #2b405b;background:#0b1727;color:#aebfd3;border-radius:9px;font-size:12px;font-weight:850;padding:8px 6px}
+.seg-btn.active{background:linear-gradient(180deg,#223b60,#192f4d);color:#fff;border-color:#5d7fa8}
+.seg-btn.up.active{background:#3a2a16;border-color:#9a6c32;color:#ffd69a}
+.seg-btn.down.active{background:#10283e;border-color:#3974a8;color:#b9ddff}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.btn{border:0;border-radius:11px;padding:11px 15px;font-weight:900;background:#17304d;color:#deebf8}
+.btn.primary{background:linear-gradient(135deg,#e8b944,#f7d56f);color:#151c27}
+.btn.danger{background:#391720;color:#ffb7c0}
+.btn.secondary{background:#15263e}
+.btn:hover{filter:brightness(1.08)}
+.summary-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.summary-title h2{margin:0;font-size:18px}
+.limit{font-size:12px;color:var(--muted)}
+.total-panel{padding:18px;border:1px solid #725923;border-radius:16px;background:linear-gradient(135deg,#171c1f,#2a2410);margin-bottom:12px}
+.total-label{font-size:12px;color:#cbbf9c;font-weight:800}
+.total-value{font-size:44px;font-weight:950;color:var(--gold2);letter-spacing:-.03em;margin-top:3px}
+.total-foot{display:flex;justify-content:space-between;color:#c4cfdd;font-size:12px;margin-top:6px}
+.progress{height:10px;background:#15263a;border-radius:999px;overflow:hidden;margin-top:12px}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--gold),var(--red));transition:.25s}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.metric{background:#091629;border:1px solid #233850;border-radius:13px;padding:12px}
+.metric .label{font-size:11px;color:var(--muted)}
+.metric .value{font-size:20px;font-weight:950;margin-top:3px}
+.status{margin-top:12px;padding:14px;border-radius:13px;border:1px solid #2e4b63;background:#0b1a2c}
+.status strong{display:block;font-size:15px;margin-bottom:4px}
+.status small{color:var(--muted)}
+.status.ok{border-color:#286348;background:#0a211a}.status.warn{border-color:#7f6125;background:#2b210d}.status.bad{border-color:#793247;background:#2b1118}
+.image-result{width:100%;margin-top:12px}
+.score-table-card{margin-top:18px;padding:0;overflow:hidden}
+.table-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;background:transparent;border:0;color:var(--text);padding:18px 20px;font-weight:900;font-size:18px}
+.table-toggle small{color:var(--muted);font-size:12px;font-weight:700}
+.table-content{display:none;padding:0 20px 20px}
+.table-content.open{display:block}
+.table-tools{display:flex;gap:9px;margin-bottom:10px}
+.table-wrap{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:13px}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{padding:10px 12px;border-bottom:1px solid #20334b;text-align:right;font-size:13px}
+th{position:sticky;top:0;background:#13243a;color:#bcd0e9;z-index:2}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#0d1a2d;z-index:1}
+th:first-child{z-index:3}
+tr:last-child td{border-bottom:0}.high{color:var(--gold);font-weight:900}.note{color:var(--muted);font-size:12px;line-height:1.6;margin-top:10px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(2,7,13,.72);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.modal-backdrop.open{display:flex}
+.modal{width:min(760px,100%);max-height:88vh;overflow:auto;background:#0c1829;border:1px solid #2a405d;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid #203650;position:sticky;top:0;background:#0c1829;z-index:3}
+.modal-head h3{margin:0;font-size:19px}.modal-close{border:0;background:#16263d;color:#c7d6e8;border-radius:9px;width:38px;height:38px}
+.tier-search-wrap{padding:14px 20px 0}.tier-groups{padding:14px 20px 20px;display:grid;gap:14px}.tier-group{border:1px solid #223750;border-radius:14px;padding:12px;background:#091523}
+.tier-group h4{margin:0 0 10px;font-size:14px;color:#dce8f6}
+.tier-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.tier-choice{border:1px solid #2b405a;background:#0d1b2d;color:#bed0e4;border-radius:9px;padding:10px 6px;font-size:12px;font-weight:850}
+.tier-choice:hover{border-color:#6a88ad;color:#fff}
+.empty-tip{text-align:center;color:var(--muted);padding:18px}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.side-card{position:static}.player-top{grid-template-columns:42px 1fr 1fr 86px 38px}}
+@media(max-width:720px){.wrap{padding:22px 12px 50px}.hero{align-items:flex-start;flex-direction:column}.rule-badge{white-space:normal}.player-top{grid-template-columns:38px 1fr 38px}.player-top .text-input{grid-column:2/4}.tier-btn{grid-column:2/4}.score-box{grid-column:2;text-align:left}.remove{grid-column:3;grid-row:1}.player-bottom{grid-template-columns:1fr}.segment{grid-template-columns:repeat(5,1fr)}.metrics{grid-template-columns:1fr 1fr 1fr}.tier-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:460px){.clan-row{flex-direction:column}.actions .btn{flex:1}.metrics{grid-template-columns:1fr}.segment{grid-template-columns:repeat(3,1fr)}.segment .seg-btn:nth-child(4),.segment .seg-btn:nth-child(5){grid-column:auto}.tier-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="hero-kicker">🌶️ 고추밭 클랜 관리</div>
+      <h1>고추밭 클랜 점수 계산기</h1>
+      <p>클랜원 최대 5명의 티어와 포지션을 선택하면 점수를 실시간으로 계산합니다.</p>
+    </div>
+    <div class="rule-badge">클랜 최대 5명 · 기준 상한 150점</div>
+  </header>
+
+  <div class="layout">
+    <section class="card main-card">
+      <div class="section-head">
+        <h2>👥 클랜 구성</h2>
+        <span>닉네임은 선택사항입니다</span>
+      </div>
+      <div class="clan-row">
+        <input id="clanName" class="text-input" maxlength="30" placeholder="클랜 이름 (선택사항)">
+        <button class="btn secondary" id="sampleBtn" type="button">예시 불러오기</button>
+      </div>
+      <div id="players" class="players"></div>
+      <div class="actions">
+        <button class="btn primary" id="addBtn" type="button">＋ 클랜원 추가</button>
+        <button class="btn danger" id="resetBtn" type="button">전체 초기화</button>
+      </div>
+    </section>
+
+    <aside class="card side-card">
+      <div class="summary-title"><h2>⚖️ 클랜 점수 현황</h2><span class="limit">150.0점 기준</span></div>
+      <div class="total-panel">
+        <div class="total-label">클랜 총점</div>
+        <div class="total-value" id="total">0.0</div>
+        <div class="total-foot"><span id="countText">0명 선택</span><span id="remainText">150.0점 남음</span></div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="label">평균 점수</div><div class="value" id="avg">0.0</div></div>
+        <div class="metric"><div class="label">최고점</div><div class="value" id="max">0.0</div></div>
+        <div class="metric"><div class="label">점수 격차</div><div class="value" id="gap">0.0</div></div>
+      </div>
+      <div class="status ok" id="status"><strong>클랜원을 구성해 주세요.</strong><small>티어와 포지션을 선택하면 바로 계산됩니다.</small></div>
+      <button class="btn primary image-result" id="imageBtn" type="button">📸 결과 이미지 저장</button>
+    </aside>
+  </div>
+
+  <section class="card score-table-card">
+    <button class="table-toggle" id="tableToggle" type="button">
+      <span>📊 공식 클랜 점수표</span>
+      <small id="tableToggleText">점수표 펼치기 ▼</small>
+    </button>
+    <div class="table-content" id="tableContent">
+      <div class="table-tools"><input id="scoreSearch" class="text-input" placeholder="티어 검색 (예: 마스터 1000+, 다이아1)"></div>
+      <div class="table-wrap"><table><thead><tr><th>티어</th><th>🛡️ 탑</th><th>🌲 정글</th><th>🔮 미드</th><th>🏹 원딜</th><th>👑 서폿</th></tr></thead><tbody id="scoreBody"></tbody></table></div>
+      <div class="note">⭐ 마스터는 1000점 이상까지 세분화 · 다이아 구간은 상대적으로 촘촘하게 적용</div>
+    </div>
+  </section>
+</div>
+
+<div class="modal-backdrop" id="tierModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tierModalTitle">
+    <div class="modal-head"><h3 id="tierModalTitle">티어 선택</h3><button class="modal-close" id="modalClose" type="button">✕</button></div>
+    <div class="tier-search-wrap"><input class="text-input" id="tierSearch" placeholder="티어 검색"></div>
+    <div class="tier-groups" id="tierGroups"></div>
+  </div>
+</div>
+
+<script>
+const lanes=["TOP","JUG","MID","ADC","SUP"];
+const laneNames={TOP:"탑",JUG:"정글",MID:"미드",ADC:"원딜",SUP:"서폿"};
+const laneIcons={TOP:"🛡️",JUG:"🌲",MID:"🔮",ADC:"🏹",SUP:"👑"};
+
+const rows=[
+["그마/챌 2000+",53.5,52.4,53.5,53.5,51.4],["그마/챌 1900~1999",53.1,52.0,53.1,53.1,50.9],["그마/챌 1800~1899",52.3,51.3,52.3,52.3,50.2],["그마/챌 1700~1799",51.7,50.6,51.7,51.7,49.5],["그마/챌 1600~1699",50.9,49.9,50.9,50.9,48.8],["그마/챌 1500~1599",50.2,49.1,50.2,50.2,48.0],["그마/챌 1400~1499",49.5,48.5,49.5,49.5,47.4],["그마/챌 1300~1399",48.8,47.7,48.8,48.8,46.7],["그마/챌 1200~1299",48.2,47.1,48.2,48.2,46.0],["그마/챌 1100~1199",47.4,46.3,47.4,47.4,45.3],["그마/챌 1000~1099",46.7,45.6,46.7,46.7,44.5],["그마/챌 900~999",46.0,44.9,46.0,46.0,43.9],["그마/챌 800~899",45.3,44.2,45.3,45.3,43.1],["그마/챌 700~799",44.5,43.4,44.5,44.5,42.4],["그마/챌 600~699",43.9,42.8,43.9,43.9,41.7],["그마/챌 500~599",43.1,42.1,43.1,43.1,41.0],["그마/챌 400~499",42.5,41.4,42.5,42.5,40.3],["그마/챌 300~399",41.7,40.7,41.7,41.7,39.6],["그마/챌 200~299",41.0,39.9,41.0,41.0,38.8],["그마/챌 100~199",40.3,39.3,40.3,40.3,38.2],["그마/챌 0~99",39.6,38.5,39.6,39.6,37.5],
+["마스터 1000+",40.7,39.6,40.7,40.7,38.5],["마스터 900~999",40.1,39.1,40.1,40.1,38.0],["마스터 800~899",39.6,38.5,39.6,39.6,37.5],["마스터 700~799",39.1,38.0,39.1,39.1,36.9],["마스터 600~699",38.0,36.9,38.0,38.0,35.8],["마스터 500~599",36.9,35.8,36.9,36.9,34.8],["마스터 400~499",35.8,34.8,35.8,35.8,33.7],["마스터 300~399",35.1,34.0,35.1,35.1,33.0],["마스터 200~299",34.5,33.4,34.5,34.5,32.3],["마스터 100~199",33.8,32.7,33.8,33.8,31.7],["마스터 0~99",33.2,32.1,33.2,33.2,31.0],
+["다이아1",31.0,30.5,32.1,30.0,31.6],["다이아2",28.9,28.4,30.0,27.8,29.4],["다이아3",26.8,26.2,27.8,25.7,27.3],["다이아4",24.6,24.1,25.7,23.5,25.1],
+["에메랄드1",21.4,20.9,22.5,20.3,21.9],["에메랄드2",19.3,18.7,20.3,18.2,19.8],["에메랄드3",17.1,16.6,18.2,16.1,17.7],["에메랄드4",15.0,14.4,16.1,13.9,15.5],
+["플래티넘1",12.8,12.3,13.9,11.8,13.4],["플래티넘2",11.8,11.2,12.8,10.7,12.3],["플래티넘3",10.7,10.2,11.8,9.6,11.2],["플래티넘4",9.6,9.1,10.7,8.6,10.2],
+["골드1",8.6,8.0,9.6,7.5,9.1],["골드2",7.5,7.0,8.6,6.4,8.0],["골드3",6.4,5.9,7.5,5.4,7.0],["골드4",5.4,4.8,6.4,4.3,5.9],
+["실버1",4.3,4.0,4.8,3.7,4.6],["실버2",3.7,3.4,4.3,3.2,4.1],["실버3",3.2,2.9,3.7,2.7,3.5],["실버4",2.7,2.4,3.2,2.1,3.0],
+["브론즈1",2.1,1.9,2.7,1.7,2.4],["브론즈2",1.8,1.6,2.4,1.4,2.0],["브론즈3",1.5,1.3,2.0,1.2,1.7],["브론즈4",1.2,1.0,1.7,1.0,1.4]
+];
+const data={}; rows.forEach(r=>data[r[0]]={TOP:r[1],JUG:r[2],MID:r[3],ADC:r[4],SUP:r[5]});
+const tierList=rows.map(r=>r[0]);
+const state=[];
+let activeTierIndex=null;
+
+const playersEl=document.getElementById('players');
+function addPlayer(v={}){
+  if(state.length>=5) return;
+  state.push({name:v.name||'',tier:v.tier||'',lane:v.lane||'',adjust:v.adjust||0});
+  renderPlayers();
+}
+function removePlayer(i){state.splice(i,1);if(!state.length)addPlayer();else renderPlayers();}
+function setLane(i,lane){state[i].lane=lane;renderPlayers();}
+function setAdjust(i,val){state[i].adjust=state[i].adjust===val?0:val;renderPlayers();}
+function openTierModal(i){activeTierIndex=i;document.getElementById('tierSearch').value='';renderTierGroups('');document.getElementById('tierModal').classList.add('open');document.getElementById('tierModal').setAttribute('aria-hidden','false');}
+function closeTierModal(){document.getElementById('tierModal').classList.remove('open');document.getElementById('tierModal').setAttribute('aria-hidden','true');activeTierIndex=null;}
+function tierGroupName(t){if(t.startsWith('그마/챌'))return '그랜드마스터 / 챌린저';if(t.startsWith('마스터'))return '마스터';if(t.startsWith('다이아'))return '다이아';if(t.startsWith('에메랄드'))return '에메랄드';if(t.startsWith('플래티넘'))return '플래티넘';if(t.startsWith('골드'))return '골드';if(t.startsWith('실버'))return '실버';return '브론즈';}
+function renderTierGroups(q=''){
+  const box=document.getElementById('tierGroups');
+  const filtered=tierList.filter(t=>t.toLowerCase().includes(q.toLowerCase()));
+  const groups={};filtered.forEach(t=>(groups[tierGroupName(t)]??=[]).push(t));
+  box.innerHTML='';
+  Object.entries(groups).forEach(([name,items])=>{
+    const g=document.createElement('div');g.className='tier-group';
+    const h=document.createElement('h4');h.textContent=name;g.appendChild(h);
+    const grid=document.createElement('div');grid.className='tier-grid';
+    items.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='tier-choice';b.textContent=t;b.addEventListener('click',()=>{if(activeTierIndex!==null){state[activeTierIndex].tier=t;renderPlayers();closeTierModal();}});grid.appendChild(b)});
+    g.appendChild(grid);box.appendChild(g);
+  });
+  if(!filtered.length) box.innerHTML='<div class="empty-tip">검색 결과가 없습니다.</div>';
+}
+function scoreOf(p){if(!p.tier||!p.lane)return 0;return Math.max(0,data[p.tier][p.lane]+p.adjust)}
+function renderPlayers(){
+  playersEl.innerHTML='';
+  state.forEach((p,i)=>{
+    const card=document.createElement('div');card.className='player-card'+(p.adjust===5?' adjust-up':p.adjust===-3?' adjust-down':'');
+    const top=document.createElement('div');top.className='player-top';
+    const idx=document.createElement('div');idx.className='index';idx.textContent=i+1;
+    const name=document.createElement('input');name.className='text-input';name.placeholder='닉네임';name.value=p.name;name.addEventListener('input',e=>{state[i].name=e.target.value});
+    const tier=document.createElement('button');tier.type='button';tier.className='tier-btn';tier.innerHTML=`<span>${p.tier||'티어 선택'}</span><span>▾</span>`;tier.addEventListener('click',()=>openTierModal(i));
+    const sb=document.createElement('div');sb.className='score-box';sb.innerHTML=`<div class="score">${scoreOf(p).toFixed(1)}</div><div class="sub">${p.adjust?`보정 ${p.adjust>0?'+':''}${p.adjust}점`:'기본 점수'}</div>`;
+    const rm=document.createElement('button');rm.type='button';rm.className='remove';rm.textContent='×';rm.title='삭제';rm.addEventListener('click',()=>removePlayer(i));
+    [idx,name,tier,sb,rm].forEach(x=>top.appendChild(x));
+    const bottom=document.createElement('div');bottom.className='player-bottom';
+    const laneWrap=document.createElement('div');laneWrap.innerHTML='<div class="group-label">포지션</div>';
+    const laneSeg=document.createElement('div');laneSeg.className='segment';
+    lanes.forEach(l=>{const b=document.createElement('button');b.type='button';b.className='seg-btn'+(p.lane===l?' active':'');b.textContent=`${laneIcons[l]} ${laneNames[l]}`;b.addEventListener('click',()=>setLane(i,l));laneSeg.appendChild(b)});laneWrap.appendChild(laneSeg);
+    const adjWrap=document.createElement('div');adjWrap.innerHTML='<div class="group-label">티어 보정</div>';
+    const adjSeg=document.createElement('div');adjSeg.className='segment adjust';
+    [[0,'기본',null],[5,'상향 +5','up'],[-3,'하향 -3','down']].forEach(([v,label,cls])=>{const b=document.createElement('button');b.type='button';b.className='seg-btn'+(cls?' '+cls:'')+(p.adjust===v?' active':'');b.textContent=label;b.addEventListener('click',()=>{state[i].adjust=v;renderPlayers()});adjSeg.appendChild(b)});adjWrap.appendChild(adjSeg);
+    bottom.appendChild(laneWrap);bottom.appendChild(adjWrap);
+    card.appendChild(top);card.appendChild(bottom);playersEl.appendChild(card);
+  });
+  calc();
+}
+function calc(){
+  const vals=state.map(scoreOf).filter(v=>v>0);const total=vals.reduce((a,b)=>a+b,0);const avg=vals.length?total/vals.length:0;const max=vals.length?Math.max(...vals):0;const min=vals.length?Math.min(...vals):0;const gap=vals.length?max-min:0;
+  document.getElementById('total').textContent=total.toFixed(1);document.getElementById('avg').textContent=avg.toFixed(1);document.getElementById('max').textContent=max.toFixed(1);document.getElementById('gap').textContent=gap.toFixed(1);
+  document.getElementById('countText').textContent=`${vals.length}명 선택`;document.getElementById('remainText').textContent=total>150?`${(total-150).toFixed(1)}점 초과`:`${(150-total).toFixed(1)}점 남음`;document.getElementById('bar').style.width=Math.min(total/150*100,100)+'%';
+  const s=document.getElementById('status');
+  if(!vals.length){s.className='status ok';s.innerHTML='<strong>클랜원을 구성해 주세요.</strong><small>티어와 포지션을 선택하면 바로 계산됩니다.</small>'}
+  else if(total>150){s.className='status bad';s.innerHTML=`<strong>🔴 기준 상한 초과</strong><small>현재 ${(total-150).toFixed(1)}점 초과했습니다.</small>`}
+  else if(total>=135){s.className='status warn';s.innerHTML=`<strong>🟠 상한에 가까운 구성입니다.</strong><small>150점까지 ${(150-total).toFixed(1)}점 남았습니다.</small>`}
+  else{s.className='status ok';s.innerHTML=`<strong>🟢 현재 기준 내 구성입니다.</strong><small>${vals.length}명 기준 · 150점까지 ${(150-total).toFixed(1)}점 남았습니다.</small>`}
+}
+function reset(){state.length=0;for(let i=0;i<5;i++)addPlayer();}
+
+document.getElementById('addBtn').addEventListener('click',()=>addPlayer());
+document.getElementById('resetBtn').addEventListener('click',reset);
+document.getElementById('sampleBtn').addEventListener('click',()=>{state.length=0;[
+{name:'예시 탑',tier:'다이아1',lane:'TOP',adjust:0},{name:'예시 정글',tier:'에메랄드2',lane:'JUG',adjust:0},{name:'예시 미드',tier:'마스터 1000+',lane:'MID',adjust:5},{name:'예시 원딜',tier:'플래티넘1',lane:'ADC',adjust:0},{name:'예시 서폿',tier:'골드2',lane:'SUP',adjust:-3}
+].forEach(x=>state.push(x));renderPlayers();});
+
+
+function roundedRect(ctx,x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
+}
+function fitText(ctx,text,maxWidth,startSize,minSize=22){
+  let size=startSize;do{ctx.font=`800 ${size}px Pretendard, \"Noto Sans KR\", Arial, sans-serif`;if(ctx.measureText(text).width<=maxWidth)return size;size-=2}while(size>=minSize);return minSize;
+}
+function buildResultImage(){
+  const selected=state.map((p,i)=>({...p,index:i+1,score:scoreOf(p)})).filter(p=>p.score>0);
+  if(!selected.length){alert('이미지로 저장할 클랜원을 먼저 구성해 주세요.');return null;}
+  const clan=document.getElementById('clanName').value.trim()||'이름 없는 클랜';
+  const total=selected.reduce((a,p)=>a+p.score,0);const avg=total/selected.length;const max=Math.max(...selected.map(p=>p.score));const min=Math.min(...selected.map(p=>p.score));const gap=max-min;
+  const W=1400,H=960;const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');
+  const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#07101f');bg.addColorStop(.55,'#0b1728');bg.addColorStop(1,'#050b14');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const glow=ctx.createRadialGradient(170,30,0,170,30,520);glow.addColorStop(0,'rgba(37,82,135,.40)');glow.addColorStop(1,'rgba(7,16,31,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#f2c45a';ctx.font='900 24px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('🌶️ 고추밭 클랜 점수 계산기',78,78);
+  const titleSize=fitText(ctx,clan,760,56,34);ctx.font=`950 ${titleSize}px Pretendard, \"Noto Sans KR\", Arial, sans-serif`;ctx.fillStyle='#eef5ff';ctx.fillText(clan,78,145);
+  ctx.fillStyle='#8da3bf';ctx.font='700 22px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(`클랜원 ${selected.length}명 · 기준 상한 150.0점`,80,186);
+  roundedRect(ctx,930,58,390,170,26);ctx.fillStyle='#171c1f';ctx.fill();ctx.strokeStyle='#725923';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#cbbf9c';ctx.font='800 19px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('클랜 총점',970,100);
+  ctx.fillStyle='#ffd979';ctx.font='950 70px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(total.toFixed(1),968,174);
+  ctx.fillStyle='#aab8c9';ctx.font='700 18px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(total>150?`${(total-150).toFixed(1)}점 초과`:`${(150-total).toFixed(1)}점 남음`,1145,199);
+  const listX=78,listY=260,listW=840,rowH=108;
+  ctx.fillStyle='#8da3bf';ctx.font='800 18px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('클랜 구성',listX,listY-18);
+  selected.forEach((p,idx)=>{
+    const y=listY+idx*rowH;roundedRect(ctx,listX,y,listW,92,18);ctx.fillStyle='#0a1728';ctx.fill();ctx.strokeStyle=p.adjust===5?'#8c6630':p.adjust===-3?'#2e5a82':'#243a55';ctx.lineWidth=2;ctx.stroke();
+    roundedRect(ctx,listX+18,y+19,54,54,14);ctx.fillStyle='#152945';ctx.fill();ctx.fillStyle='#f2c45a';ctx.font='950 24px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.textAlign='center';ctx.fillText(String(idx+1),listX+45,y+54);ctx.textAlign='left';
+    const nick=p.name||`클랜원 ${p.index}`;ctx.fillStyle='#eef5ff';ctx.font='900 25px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(nick,listX+92,y+38);
+    ctx.fillStyle='#8da3bf';ctx.font='700 17px Pretendard, "Noto Sans KR", Arial, sans-serif';const adj=p.adjust===5?' · 티어 상향 +5점':p.adjust===-3?' · 티어 하향 -3점':'';ctx.fillText(`${laneNames[p.lane]} · ${p.tier}${adj}`,listX+92,y+68);
+    ctx.fillStyle='#ffd979';ctx.font='950 31px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.textAlign='right';ctx.fillText(`${p.score.toFixed(1)}점`,listX+listW-24,y+57);ctx.textAlign='left';
+  });
+  const sx=955,sy=286,sw=365;ctx.fillStyle='#8da3bf';ctx.font='800 18px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('점수 요약',sx,sy-18);
+  const metrics=[['평균 점수',avg.toFixed(1)],['최고점',max.toFixed(1)],['점수 격차',gap.toFixed(1)]];
+  metrics.forEach((m,i)=>{const y=sy+i*112;roundedRect(ctx,sx,y,sw,94,18);ctx.fillStyle='#091629';ctx.fill();ctx.strokeStyle='#233850';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#8da3bf';ctx.font='700 17px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(m[0],sx+22,y+31);ctx.fillStyle='#eef5ff';ctx.font='950 35px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(m[1],sx+22,y+70)});
+  const statusY=sy+354;roundedRect(ctx,sx,statusY,sw,135,18);ctx.fillStyle=total>150?'#2b1118':total>=135?'#2b210d':'#0a211a';ctx.fill();ctx.strokeStyle=total>150?'#793247':total>=135?'#7f6125':'#286348';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=total>150?'#ff8b9b':total>=135?'#f2c45a':'#55d89b';ctx.beginPath();ctx.arc(sx+28,statusY+34,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#eef5ff';ctx.font='900 21px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(total>150?'기준 상한을 초과했습니다.':total>=135?'상한에 가까운 구성입니다.':'현재 기준 내 구성입니다.',sx+50,statusY+42);ctx.fillStyle='#9cafc5';ctx.font='700 16px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText(total>150?`${(total-150).toFixed(1)}점 초과`:`150점까지 ${(150-total).toFixed(1)}점 남음`,sx+22,statusY+78);
+  const px=sx+22,py=statusY+96,pw=sw-44;roundedRect(ctx,px,py,pw,12,6);ctx.fillStyle='#15263a';ctx.fill();const fill=Math.min(total/150,1)*pw;if(fill>0){const grad=ctx.createLinearGradient(px,0,px+pw,0);grad.addColorStop(0,'#55d89b');grad.addColorStop(.65,'#f2c45a');grad.addColorStop(1,'#ff6a7f');roundedRect(ctx,px,py,fill,12,6);ctx.fillStyle=grad;ctx.fill()}
+  ctx.strokeStyle='#20344d';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(78,842);ctx.lineTo(1320,842);ctx.stroke();ctx.fillStyle='#71869f';ctx.font='700 16px Pretendard, "Noto Sans KR", Arial, sans-serif';ctx.fillText('고추밭 클랜 점수 기준 · 티어/포지션 및 보정 점수 반영',78,882);ctx.textAlign='right';ctx.fillText('최대 5명 · 상한 150점',1320,882);ctx.textAlign='left';
+  return {canvas,clan};
+}
+
+document.getElementById('imageBtn').addEventListener('click',()=>{
+  const result=buildResultImage();if(!result)return;
+  const {canvas,clan}=result;const safe=(clan||'클랜').replace(/[\\/:*?\"<>|]/g,'_').slice(0,30);
+  canvas.toBlob(blob=>{if(!blob){alert('이미지 생성에 실패했습니다.');return;}const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`고추밭_${safe}_점수결과.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);const b=document.getElementById('imageBtn');const old=b.textContent;b.textContent='✅ 이미지 저장 완료';setTimeout(()=>b.textContent=old,1400)},'image/png');
+});
+
+document.getElementById('modalClose').addEventListener('click',closeTierModal);
+document.getElementById('tierModal').addEventListener('click',e=>{if(e.target.id==='tierModal')closeTierModal()});
+document.getElementById('tierSearch').addEventListener('input',e=>renderTierGroups(e.target.value.trim()));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeTierModal()});
+
+document.getElementById('tableToggle').addEventListener('click',()=>{const c=document.getElementById('tableContent');const open=c.classList.toggle('open');document.getElementById('tableToggleText').textContent=open?'점수표 접기 ▲':'점수표 펼치기 ▼'});
+const scoreBody=document.getElementById('scoreBody');rows.forEach((r,idx)=>{const tr=document.createElement('tr');r.forEach((x,i)=>{const td=document.createElement('td');td.textContent=i===0?x:Number(x).toFixed(1);if(i>0&&idx<5)td.className='high';tr.appendChild(td)});scoreBody.appendChild(tr)});
+document.getElementById('scoreSearch').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();[...scoreBody.querySelectorAll('tr')].forEach(tr=>{tr.style.display=(!q||tr.cells[0].textContent.toLowerCase().includes(q))?'':'none'})});
+reset();
+</script>
+</body>
+</html>
