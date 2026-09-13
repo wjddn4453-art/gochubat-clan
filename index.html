@@ -251,8 +251,8 @@ tbody tr:hover td:first-child{background:#101923}
       </div>
 
       <div class="rules">
-        <div class="rule"><b>상향 +5</b><span>FOW 기록보다 현재 실력이 높다고 판단될 때</span></div>
-        <div class="rule"><b>하향 -3</b><span>FOW 기록보다 현재 실력이 낮다고 판단될 때</span></div>
+        <div class="rule"><b>상향 +5</b><span>서버 내 「티어 상향 조정」 역할 보유자</span></div>
+        <div class="rule"><b>하향 -3</b><span>서버 내 「티어 하향 조정」 역할 보유자</span></div>
         <div class="rule"><b>비활동 +3</b><span>현재 시즌 솔로/듀오 50판 미만 + 과거 고티어 기록 보유</span></div>
       </div>
     </section>
@@ -396,13 +396,13 @@ function renderPlayers(){
     const up=document.createElement("button");
     up.className="tag up"+(p.adjust===5?" active":"");
     up.textContent="상향 +5";
-    up.title="FOW 기록보다 현재 실력이 높다고 판단되는 경우";
+    up.title="서버 내 「티어 상향 조정」 역할 보유자에게 적용";
     up.onclick=()=>{state[i].adjust=p.adjust===5?0:5;renderPlayers();};
 
     const down=document.createElement("button");
     down.className="tag down"+(p.adjust===-3?" active":"");
     down.textContent="하향 -3";
-    down.title="FOW 기록보다 현재 실력이 낮다고 판단되는 경우";
+    down.title="서버 내 「티어 하향 조정」 역할 보유자에게 적용";
     down.onclick=()=>{state[i].adjust=p.adjust===-3?0:-3;renderPlayers();};
 
     const inactive=document.createElement("button");
